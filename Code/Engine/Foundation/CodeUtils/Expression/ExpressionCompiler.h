@@ -11,10 +11,10 @@ public:
   ezExpressionCompiler();
   ~ezExpressionCompiler();
 
-  ezResult Compile(ezExpressionAST& ref_ast, ezExpressionByteCode& out_byteCode, ezStringView sDebugAstOutputPath = ezStringView());
+  ezResult Compile(ezExpressionAST& inout_ast, ezExpressionByteCode& out_byteCode, ezStringView sDebugAstOutputPath = ezStringView());
 
 private:
-  ezResult TransformAndOptimizeAST(ezExpressionAST& ast, ezStringView sDebugAstOutputPath);
+  ezResult TransformAndOptimizeAST(ezExpressionAST& inout_ast, ezStringView sDebugAstOutputPath);
   ezResult BuildNodeInstructions(const ezExpressionAST& ast);
   ezResult UpdateRegisterLifetime(const ezExpressionAST& ast);
   ezResult AssignRegisters();
@@ -22,10 +22,10 @@ private:
   ezResult GenerateConstantByteCode(const ezExpressionAST::Constant* pConstant, ezExpressionByteCode& out_byteCode);
 
   using TransformFunc = ezDelegate<ezExpressionAST::Node*(ezExpressionAST::Node*)>;
-  ezResult TransformASTPreOrder(ezExpressionAST& ast, TransformFunc func);
-  ezResult TransformASTPostOrder(ezExpressionAST& ast, TransformFunc func);
-  ezResult TransformNode(ezExpressionAST::Node*& pNode, TransformFunc& func);
-  ezResult TransformOutputNode(ezExpressionAST::Output*& pOutputNode, TransformFunc& func);
+  ezResult TransformASTPreOrder(ezExpressionAST& inout_ast, TransformFunc func);
+  ezResult TransformASTPostOrder(ezExpressionAST& inout_ast, TransformFunc func);
+  ezResult TransformNode(ezExpressionAST::Node*& inout_pNode, TransformFunc& func);
+  ezResult TransformOutputNode(ezExpressionAST::Output*& inout_pOutputNode, TransformFunc& func);
 
   void DumpAST(const ezExpressionAST& ast, ezStringView sOutputPath, ezStringView sSuffix);
 

@@ -198,11 +198,11 @@ public:
   ezArrayPtr<const ezExpression::StreamDesc> GetOutputs() const;
   ezArrayPtr<const ezExpression::FunctionDesc> GetFunctions() const;
 
-  static OpCode::Enum GetOpCode(const StorageType*& ref_pByteCode);
-  static ezUInt32 GetRegisterIndex(const StorageType*& ref_pByteCode);
-  static ezExpression::Register GetConstant(const StorageType*& ref_pByteCode);
-  static ezUInt32 GetFunctionIndex(const StorageType*& ref_pByteCode);
-  static ezUInt32 GetFunctionArgCount(const StorageType*& ref_pByteCode);
+  static OpCode::Enum GetOpCode(const StorageType*& inout_pByteCode);
+  static ezUInt32 GetRegisterIndex(const StorageType*& inout_pByteCode);
+  static ezExpression::Register GetConstant(const StorageType*& inout_pByteCode);
+  static ezUInt32 GetFunctionIndex(const StorageType*& inout_pByteCode);
+  static ezUInt32 GetFunctionArgCount(const StorageType*& inout_pByteCode);
 
   void Disassemble(ezStringBuilder& out_sDisassembly) const;
 

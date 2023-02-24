@@ -178,13 +178,13 @@ public:
   /// \brief Processes the given file and returns the result as a stream of tokens.
   ///
   /// This function is useful when you want to further process the output afterwards and thus need it in a tokenized form anyway.
-  ezResult Process(const char* szMainFile, ezTokenParseUtils::TokenStream& ref_tokenOutput);
+  ezResult Process(const char* szMainFile, ezTokenParseUtils::TokenStream& out_tokenOutput);
 
   /// \brief Processes the given file and returns the result as a string.
   ///
   /// This function creates a string from the tokenized result. If \a bKeepComments is true, all block and line comments
   /// are included in the output string, otherwise they are removed.
-  ezResult Process(const char* szMainFile, ezStringBuilder& ref_sOutput, bool bKeepComments = true, bool bRemoveRedundantWhitespace = false, bool bInsertLine = false);
+  ezResult Process(const char* szMainFile, ezStringBuilder& out_sOutput, bool bKeepComments = true, bool bRemoveRedundantWhitespace = false, bool bInsertLine = false);
 
 
 private:
@@ -257,7 +257,7 @@ private:
 
 public:
   static ezResult DefaultFileLocator(const char* szCurAbsoluteFile, const char* szIncludeFile, ezPreprocessor::IncludeType incType, ezStringBuilder& out_sAbsoluteFilePath);
-  static ezResult DefaultFileOpen(const char* szAbsoluteFile, ezDynamicArray<ezUInt8>& ref_fileContent, ezTimestamp& out_fileModification);
+  static ezResult DefaultFileOpen(const char* szAbsoluteFile, ezDynamicArray<ezUInt8>& inout_fileContent, ezTimestamp& out_fileModification);
 
 private: // *** File Handling ***
   ezResult OpenFile(const char* szFile, const ezTokenizer** pTokenizer);

@@ -92,7 +92,7 @@ public:
   ezDeque<ezToken>& GetTokens() { return m_Tokens; }
 
   /// \brief Returns an array of all tokens. New line tokens are ignored.
-  void GetAllLines(ezHybridArray<const ezToken*, 32>& ref_tokens) const;
+  void GetAllLines(ezHybridArray<const ezToken*, 32>& out_tokens) const;
 
   /// \brief Returns an array of tokens that represent the next line in the file.
   ///
@@ -104,9 +104,9 @@ public:
   /// That means all such sequences will be ignored. Therefore the tokens that are returned as one line might not
   /// contain all tokens that are actually in the stream. Also the tokens might have different line numbers, when
   /// two or more lines from the file are merged into one logical line.
-  ezResult GetNextLine(ezUInt32& ref_uiFirstToken, ezHybridArray<const ezToken*, 32>& ref_tokens) const;
+  ezResult GetNextLine(ezUInt32& ref_uiFirstToken, ezHybridArray<const ezToken*, 32>& out_tokens) const;
 
-  ezResult GetNextLine(ezUInt32& ref_uiFirstToken, ezHybridArray<ezToken*, 32>& ref_tokens);
+  ezResult GetNextLine(ezUInt32& ref_uiFirstToken, ezHybridArray<ezToken*, 32>& out_tokens);
 
   /// \brief Returns the internal copy of the tokenized data
   const ezDynamicArray<ezUInt8>& GetTokenizedData() const { return m_Data; }

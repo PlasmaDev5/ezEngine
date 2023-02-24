@@ -914,14 +914,14 @@ void ezExpressionAST::ResolveOverloads(Node* pNode)
     return;
   }
 
-  auto CalculateMatchDistance = [](ezArrayPtr<Node*> children, ezArrayPtr<const ezEnum<ezExpression::RegisterType>> expectedTypes, ezUInt32 uiNumRequiredArgs, ezUInt32& ref_uiMaxNumElements) {
+  auto CalculateMatchDistance = [](ezArrayPtr<Node*> children, ezArrayPtr<const ezEnum<ezExpression::RegisterType>> expectedTypes, ezUInt32 uiNumRequiredArgs, ezUInt32& out_uiMaxNumElements) {
     if (children.GetCount() < uiNumRequiredArgs)
     {
       return ezInvalidIndex;
     }
 
     ezUInt32 uiMatchDistance = 0;
-    ref_uiMaxNumElements = 1;
+    out_uiMaxNumElements = 1;
     for (ezUInt32 i = 0; i < ezMath::Min(children.GetCount(), expectedTypes.GetCount()); ++i)
     {
       auto& pChildNode = children[i];
@@ -935,7 +935,7 @@ void ezExpressionAST::ResolveOverloads(Node* pNode)
         iDistance *= -ezExpression::RegisterType::Count;
       }
       uiMatchDistance += iDistance;
-      ref_uiMaxNumElements = ezMath::Max(ref_uiMaxNumElements, DataType::GetElementCount(pChildNode->m_ReturnType));
+      out_uiMaxNumElements = ezMath::Max(out_uiMaxNumElements, DataType::GetElementCount(pChildNode->m_ReturnType));
     }
     return uiMatchDistance;
   };

@@ -124,11 +124,11 @@ ezResult ezPreprocessor::ProcessFile(const char* szFile, TokenStream& TokenOutpu
   return EZ_SUCCESS;
 }
 
-ezResult ezPreprocessor::Process(const char* szMainFile, TokenStream& ref_tokenOutput)
+ezResult ezPreprocessor::Process(const char* szMainFile, TokenStream& out_tokenOutput)
 {
   EZ_ASSERT_DEV(m_FileLocatorCallback.IsValid(), "No file locator callback has been set.");
 
-  ref_tokenOutput.Clear();
+  out_tokenOutput.Clear();
 
   // Add a custom define for the __FILE__ macro
   {
@@ -168,7 +168,7 @@ ezResult ezPreprocessor::Process(const char* szMainFile, TokenStream& ref_tokenO
     return EZ_FAILURE;
   }
 
-  if (ProcessFile(sFileToOpen, ref_tokenOutput).Failed())
+  if (ProcessFile(sFileToOpen, out_tokenOutput).Failed())
     return EZ_FAILURE;
 
   m_IfdefActiveStack.PopBack();
@@ -188,16 +188,16 @@ ezResult ezPreprocessor::Process(const char* szMainFile, TokenStream& ref_tokenO
   return EZ_SUCCESS;
 }
 
-ezResult ezPreprocessor::Process(const char* szMainFile, ezStringBuilder& ref_sOutput, bool bKeepComments, bool bRemoveRedundantWhitespace, bool bInsertLine)
+ezResult ezPreprocessor::Process(const char* szMainFile, ezStringBuilder& out_sOutput, bool bKeepComments, bool bRemoveRedundantWhitespace, bool bInsertLine)
 {
-  ref_sOutput.Clear();
+  out_sOutput.Clear();
 
   TokenStream TokenOutput;
   if (Process(szMainFile, TokenOutput).Failed())
     return EZ_FAILURE;
 
   // generate the final text output
-  CombineTokensToString(TokenOutput, 0, ref_sOutput, bKeepComments, bRemoveRedundantWhitespace, bInsertLine);
+  CombineTokensToString(TokenOutput, 0, out_sOutput, bKeepComments, bRemoveRedundantWhitespace, bInsertLine);
 
   return EZ_SUCCESS;
 }

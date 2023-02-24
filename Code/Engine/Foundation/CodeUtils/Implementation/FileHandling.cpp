@@ -134,7 +134,7 @@ ezResult ezPreprocessor::DefaultFileLocator(const char* szCurAbsoluteFile, const
   return EZ_SUCCESS;
 }
 
-ezResult ezPreprocessor::DefaultFileOpen(const char* szAbsoluteFile, ezDynamicArray<ezUInt8>& ref_fileContent, ezTimestamp& out_fileModification)
+ezResult ezPreprocessor::DefaultFileOpen(const char* szAbsoluteFile, ezDynamicArray<ezUInt8>& inout_fileContent, ezTimestamp& out_fileModification)
 {
   ezFileReader r;
   if (r.Open(szAbsoluteFile).Failed())
@@ -150,7 +150,7 @@ ezResult ezPreprocessor::DefaultFileOpen(const char* szAbsoluteFile, ezDynamicAr
 
   while (ezUInt64 uiRead = r.ReadBytes(Temp, 4096))
   {
-    ref_fileContent.PushBackRange(ezArrayPtr<ezUInt8>(Temp, (ezUInt32)uiRead));
+    inout_fileContent.PushBackRange(ezArrayPtr<ezUInt8>(Temp, (ezUInt32)uiRead));
   }
 
   return EZ_SUCCESS;

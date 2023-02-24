@@ -149,45 +149,45 @@ namespace
 ezExpressionCompiler::ezExpressionCompiler() = default;
 ezExpressionCompiler::~ezExpressionCompiler() = default;
 
-ezResult ezExpressionCompiler::Compile(ezExpressionAST& ref_ast, ezExpressionByteCode& out_byteCode, ezStringView sDebugAstOutputPath /*= ezStringView()*/)
+ezResult ezExpressionCompiler::Compile(ezExpressionAST& inout_ast, ezExpressionByteCode& out_byteCode, ezStringView sDebugAstOutputPath /*= ezStringView()*/)
 {
   out_byteCode.Clear();
 
-  EZ_SUCCEED_OR_RETURN(TransformAndOptimizeAST(ref_ast, sDebugAstOutputPath));
-  EZ_SUCCEED_OR_RETURN(BuildNodeInstructions(ref_ast));
-  EZ_SUCCEED_OR_RETURN(UpdateRegisterLifetime(ref_ast));
+  EZ_SUCCEED_OR_RETURN(TransformAndOptimizeAST(inout_ast, sDebugAstOutputPath));
+  EZ_SUCCEED_OR_RETURN(BuildNodeInstructions(inout_ast));
+  EZ_SUCCEED_OR_RETURN(UpdateRegisterLifetime(inout_ast));
   EZ_SUCCEED_OR_RETURN(AssignRegisters());
-  EZ_SUCCEED_OR_RETURN(GenerateByteCode(ref_ast, out_byteCode));
+  EZ_SUCCEED_OR_RETURN(GenerateByteCode(inout_ast, out_byteCode));
 
   return EZ_SUCCESS;
 }
 
-ezResult ezExpressionCompiler::TransformAndOptimizeAST(ezExpressionAST& ast, ezStringView sDebugAstOutputPath)
+ezResult ezExpressionCompiler::TransformAndOptimizeAST(ezExpressionAST& inout_ast, ezStringView sDebugAstOutputPath)
 {
-  DumpAST(ast, sDebugAstOutputPath, "_00");
+  DumpAST(inout_ast, sDebugAstOutputPath, "_00");
 
-  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::TypeDeductionAndConversion, &ast)));
-  DumpAST(ast, sDebugAstOutputPath, "_01_TypeConv");
+  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(inout_ast, ezMakeDelegate(&ezExpressionAST::TypeDeductionAndConversion, &inout_ast)));
+  DumpAST(inout_ast, sDebugAstOutputPath, "_01_TypeConv");
 
-  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::ReplaceVectorInstructions, &ast)));
-  DumpAST(ast, sDebugAstOutputPath, "_02_ReplacedVectorInst");
+  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(inout_ast, ezMakeDelegate(&ezExpressionAST::ReplaceVectorInstructions, &inout_ast)));
+  DumpAST(inout_ast, sDebugAstOutputPath, "_02_ReplacedVectorInst");
 
-  EZ_SUCCEED_OR_RETURN(ast.ScalarizeOutputs());
-  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::ScalarizeVectorInstructions, &ast)));
-  DumpAST(ast, sDebugAstOutputPath, "_03_Scalarized");
+  EZ_SUCCEED_OR_RETURN(inout_ast.ScalarizeOutputs());
+  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(inout_ast, ezMakeDelegate(&ezExpressionAST::ScalarizeVectorInstructions, &inout_ast)));
+  DumpAST(inout_ast, sDebugAstOutputPath, "_03_Scalarized");
 
-  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &ast)));
-  DumpAST(ast, sDebugAstOutputPath, "_04_ConstantFolded1");
+  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(inout_ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &inout_ast)));
+  DumpAST(inout_ast, sDebugAstOutputPath, "_04_ConstantFolded1");
 
-  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::ReplaceUnsupportedInstructions, &ast)));
-  DumpAST(ast, sDebugAstOutputPath, "_05_ReplacedUnsupportedInst");
+  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(inout_ast, ezMakeDelegate(&ezExpressionAST::ReplaceUnsupportedInstructions, &inout_ast)));
+  DumpAST(inout_ast, sDebugAstOutputPath, "_05_ReplacedUnsupportedInst");
 
-  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &ast)));
-  DumpAST(ast, sDebugAstOutputPath, "_06_ConstantFolded2");
+  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(inout_ast, ezMakeDelegate(&ezExpressionAST::FoldConstants, &inout_ast)));
+  DumpAST(inout_ast, sDebugAstOutputPath, "_06_ConstantFolded2");
 
-  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(ast, ezMakeDelegate(&ezExpressionAST::CommonSubexpressionElimination, &ast)));
-  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(ast, ezMakeDelegate(&ezExpressionAST::Validate, &ast)));
-  DumpAST(ast, sDebugAstOutputPath, "_07_Optimized");
+  EZ_SUCCEED_OR_RETURN(TransformASTPostOrder(inout_ast, ezMakeDelegate(&ezExpressionAST::CommonSubexpressionElimination, &inout_ast)));
+  EZ_SUCCEED_OR_RETURN(TransformASTPreOrder(inout_ast, ezMakeDelegate(&ezExpressionAST::Validate, &inout_ast)));
+  DumpAST(inout_ast, sDebugAstOutputPath, "_07_Optimized");
 
   return EZ_SUCCESS;
 }
@@ -529,12 +529,12 @@ ezResult ezExpressionCompiler::GenerateConstantByteCode(const ezExpressionAST::C
   return EZ_FAILURE;
 }
 
-ezResult ezExpressionCompiler::TransformASTPreOrder(ezExpressionAST& ast, TransformFunc func)
+ezResult ezExpressionCompiler::TransformASTPreOrder(ezExpressionAST& inout_ast, TransformFunc func)
 {
   m_NodeStack.Clear();
   m_TransformCache.Clear();
 
-  for (ezExpressionAST::Output*& pOutputNode : ast.m_OutputNodes)
+  for (ezExpressionAST::Output*& pOutputNode : inout_ast.m_OutputNodes)
   {
     if (pOutputNode == nullptr)
       return EZ_FAILURE;
@@ -561,13 +561,13 @@ ezResult ezExpressionCompiler::TransformASTPreOrder(ezExpressionAST& ast, Transf
   return EZ_SUCCESS;
 }
 
-ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& ast, TransformFunc func)
+ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& inout_ast, TransformFunc func)
 {
   m_NodeStack.Clear();
   m_NodeInstructions.Clear();
   auto& nodeStackTemp = m_NodeInstructions;
 
-  for (ezExpressionAST::Node* pOutputNode : ast.m_OutputNodes)
+  for (ezExpressionAST::Node* pOutputNode : inout_ast.m_OutputNodes)
   {
     if (pOutputNode == nullptr)
       return EZ_FAILURE;
@@ -606,7 +606,7 @@ ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& ast, Trans
     }
   }
 
-  for (ezExpressionAST::Output*& pOutputNode : ast.m_OutputNodes)
+  for (ezExpressionAST::Output*& pOutputNode : inout_ast.m_OutputNodes)
   {
     EZ_SUCCEED_OR_RETURN(TransformOutputNode(pOutputNode, func));
   }
@@ -614,43 +614,43 @@ ezResult ezExpressionCompiler::TransformASTPostOrder(ezExpressionAST& ast, Trans
   return EZ_SUCCESS;
 }
 
-ezResult ezExpressionCompiler::TransformNode(ezExpressionAST::Node*& pNode, TransformFunc& func)
+ezResult ezExpressionCompiler::TransformNode(ezExpressionAST::Node*& inout_pNode, TransformFunc& func)
 {
-  if (pNode == nullptr)
+  if (inout_pNode == nullptr)
     return EZ_SUCCESS;
 
   ezExpressionAST::Node* pNewNode = nullptr;
-  if (m_TransformCache.TryGetValue(pNode, pNewNode) == false)
+  if (m_TransformCache.TryGetValue(inout_pNode, pNewNode) == false)
   {
-    pNewNode = func(pNode);
+    pNewNode = func(inout_pNode);
     if (pNewNode == nullptr)
     {
       return EZ_FAILURE;
     }
 
-    m_TransformCache.Insert(pNode, pNewNode);
+    m_TransformCache.Insert(inout_pNode, pNewNode);
   }
 
-  pNode = pNewNode;
+  inout_pNode = pNewNode;
 
   return EZ_SUCCESS;
 }
 
-ezResult ezExpressionCompiler::TransformOutputNode(ezExpressionAST::Output*& pOutputNode, TransformFunc& func)
+ezResult ezExpressionCompiler::TransformOutputNode(ezExpressionAST::Output*& inout_pOutputNode, TransformFunc& func)
 {
-  if (pOutputNode == nullptr)
+  if (inout_pOutputNode == nullptr)
     return EZ_SUCCESS;
 
-  auto pNewOutput = func(pOutputNode);
-  if (pNewOutput != pOutputNode)
+  auto pNewOutput = func(inout_pOutputNode);
+  if (pNewOutput != inout_pOutputNode)
   {
     if (pNewOutput != nullptr && ezExpressionAST::NodeType::IsOutput(pNewOutput->m_Type))
     {
-      pOutputNode = static_cast<ezExpressionAST::Output*>(pNewOutput);
+      inout_pOutputNode = static_cast<ezExpressionAST::Output*>(pNewOutput);
     }
     else
     {
-      ezLog::Error("Transformed output node for '{}' is invalid", pOutputNode->m_Desc.m_sName);
+      ezLog::Error("Transformed output node for '{}' is invalid", inout_pOutputNode->m_Desc.m_sName);
       return EZ_FAILURE;
     }
   }

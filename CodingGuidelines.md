@@ -42,6 +42,7 @@ For private and protected members, the following rules apply:
 
  ### Method / Function Parameters
  
+ * `private` and `protected` methods are exempted from all parameter rules.
  * Parameters use the same type specific prefixes
  * If a parameter is a regular reference, it is treated as if the reference didn't exist in regards to the type specific prefixes. E.g. `const bool& bValue`.
  * Single character parameters are allowed without type specific prefix.

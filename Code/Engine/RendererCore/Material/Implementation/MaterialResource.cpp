@@ -391,6 +391,98 @@ ezTextureCubeResourceHandle ezMaterialResource::GetTextureCubeBinding(const ezTe
   return ezTextureCubeResourceHandle();
 }
 
+void ezMaterialResource::SetTexture3DBinding(const ezHashedString& sName, const ezTexture3DResourceHandle& value)
+{
+  ezUInt32 uiIndex = ezInvalidIndex;
+  for (ezUInt32 i = 0; i < m_mDesc.m_Texture3DBindings.GetCount(); ++i)
+  {
+    if (m_mDesc.m_Texture2DBindings[i].m_Name == sName)
+    {
+      uiIndex = i;
+      break;
+    }
+  }
+
+  if (value.IsValid())
+  {
+    if (uiIndex != ezInvalidIndex)
+    {
+      m_mDesc.m_Texture3DBindings[uiIndex].m_Value = value;
+    }
+    else
+    {
+      auto& binding = m_mDesc.m_Texture3DBindings.ExpandAndGetRef();
+      binding.m_Name = sName;
+      binding.m_Value = value;
+    }
+  }
+  else
+  {
+    if (uiIndex != ezInvalidIndex)
+    {
+      m_mDesc.m_Texture3DBindings.RemoveAtAndSwap(uiIndex);
+    }
+  }
+
+  m_iLastModified.Increment();
+
+  m_ModifiedEvent.Broadcast(this);
+}
+
+void ezMaterialResource::SetTexture3DBinding(const char* szName, const ezTexture3DResourceHandle& value)
+{
+  ezTempHashedString sName(szName);
+
+  ezUInt32 uiIndex = ezInvalidIndex;
+  for (ezUInt32 i = 0; i < m_mDesc.m_Texture2DBindings.GetCount(); ++i)
+  {
+    if (m_mDesc.m_Texture3DBindings[i].m_Name == sName)
+    {
+      uiIndex = i;
+      break;
+    }
+  }
+
+  if (value.IsValid())
+  {
+    if (uiIndex != ezInvalidIndex)
+    {
+      m_mDesc.m_Texture3DBindings[uiIndex].m_Value = value;
+    }
+    else
+    {
+      auto& binding = m_mDesc.m_Texture3DBindings.ExpandAndGetRef();
+      binding.m_Name.Assign(szName);
+      binding.m_Value = value;
+    }
+  }
+  else
+  {
+    if (uiIndex != ezInvalidIndex)
+    {
+      m_mDesc.m_Texture3DBindings.RemoveAtAndSwap(uiIndex);
+    }
+  }
+
+  m_iLastModified.Increment();
+
+  m_ModifiedEvent.Broadcast(this);
+}
+
+ezTexture2DResourceHandle ezMaterialResource::GetTexture3DBinding(const ezTempHashedString& sName)
+{
+  auto pCachedValues = GetOrUpdateCachedValues();
+
+  // Use pointer to prevent ref counting
+  ezTexture2DResourceHandle* pBinding;
+  if (pCachedValues->m_Texture3DBindings.TryGetValue(sName, pBinding))
+  {
+    return *pBinding;
+  }
+
+  return ezTexture3DResourceHandle();
+}
+
 void ezMaterialResource::PreserveCurrentDesc()
 {
   m_mOriginalDesc = m_mDesc;
@@ -493,7 +585,7 @@ ezResourceLoadDesc ezMaterialResource::UpdateContent(ezStreamReader* pOuterStrea
 
     ezUInt8 uiVersion = 0;
     (*pOuterStream) >> uiVersion;
-    EZ_ASSERT_DEV(uiVersion <= 6, "Unknown ezMaterialBin version {0}", uiVersion);
+    EZ_ASSERT_DEV(uiVersion <= 7, "Unknown ezMaterialBin version {0}", uiVersion);
 
     ezUInt8 uiCompressionMode = 0;
     if (uiVersion >= 6)
@@ -619,6 +711,27 @@ ezResourceLoadDesc ezMaterialResource::UpdateContent(ezStreamReader* pOuterStrea
       }
     }
 
+    // 3D Textures
+    if(uiVersion >= 7)
+    {
+      ezUInt16 uiTextures = 0;
+      s >> uiTextures;
+
+      m_mDesc.m_Texture3DBindings.Reserve(uiTextures);
+
+      for (ezUInt16 i = 0; i < uiTextures; ++i)
+      {
+        s >> sTemp;
+        s >> sTemp2;
+
+        if (!sTemp.IsEmpty() && !sTemp2.IsEmpty())
+        {
+          ezMaterialResourceDescriptor::Texture3DBinding& tc = m_mDesc.m_Texture3DBindings.ExpandAndGetRef();
+          tc.m_Name.Assign(sTemp.GetData());
+          tc.m_Value = ezResourceManager::LoadResource<ezTexture3DResource>(sTemp2);
+        }
+      }
+    }
 
     if (uiVersion >= 2)
     {

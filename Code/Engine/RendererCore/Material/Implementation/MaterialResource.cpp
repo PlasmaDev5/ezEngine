@@ -11,6 +11,7 @@
 #include <RendererCore/Shader/ShaderPermutationResource.h>
 #include <RendererCore/ShaderCompiler/ShaderManager.h>
 #include <RendererCore/Textures/Texture2DResource.h>
+#include <RendererCore/Textures/Texture3DResource.h>
 #include <RendererCore/Textures/TextureCubeResource.h>
 #include <RendererCore/Textures/TextureLoader.h>
 #include <Texture/Image/Formats/DdsFileFormat.h>
@@ -32,7 +33,7 @@ void ezMaterialResourceDescriptor::Clear()
 
 bool ezMaterialResourceDescriptor::operator==(const ezMaterialResourceDescriptor& other) const
 {
-  return m_hBaseMaterial == other.m_hBaseMaterial && m_hShader == other.m_hShader && m_PermutationVars == other.m_PermutationVars && m_Parameters == other.m_Parameters && m_Texture2DBindings == other.m_Texture2DBindings && m_TextureCubeBindings == other.m_TextureCubeBindings;
+  return m_hBaseMaterial == other.m_hBaseMaterial && m_hShader == other.m_hShader && m_PermutationVars == other.m_PermutationVars && m_Parameters == other.m_Parameters && m_Texture2DBindings == other.m_Texture2DBindings && m_TextureCubeBindings == other.m_TextureCubeBindings && m_Texture3DBindings == other.m_Texture3DBindings;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -469,12 +470,12 @@ void ezMaterialResource::SetTexture3DBinding(const char* szName, const ezTexture
   m_ModifiedEvent.Broadcast(this);
 }
 
-ezTexture2DResourceHandle ezMaterialResource::GetTexture3DBinding(const ezTempHashedString& sName)
+ezTexture3DResourceHandle ezMaterialResource::GetTexture3DBinding(const ezTempHashedString& sName)
 {
   auto pCachedValues = GetOrUpdateCachedValues();
 
   // Use pointer to prevent ref counting
-  ezTexture2DResourceHandle* pBinding;
+  ezTexture3DResourceHandle* pBinding;
   if (pCachedValues->m_Texture3DBindings.TryGetValue(sName, pBinding))
   {
     return *pBinding;
@@ -712,7 +713,7 @@ ezResourceLoadDesc ezMaterialResource::UpdateContent(ezStreamReader* pOuterStrea
     }
 
     // 3D Textures
-    if(uiVersion >= 7)
+    if (uiVersion >= 7)
     {
       ezUInt16 uiTextures = 0;
       s >> uiTextures;
@@ -914,8 +915,8 @@ ezResourceLoadDesc ezMaterialResource::UpdateContent(ezStreamReader* pOuterStrea
 void ezMaterialResource::UpdateMemoryUsage(MemoryUsage& out_NewMemoryUsage)
 {
   out_NewMemoryUsage.m_uiMemoryCPU =
-    sizeof(ezMaterialResource) + (ezUInt32)(m_mDesc.m_PermutationVars.GetHeapMemoryUsage() + m_mDesc.m_Parameters.GetHeapMemoryUsage() + m_mDesc.m_Texture2DBindings.GetHeapMemoryUsage() + m_mDesc.m_TextureCubeBindings.GetHeapMemoryUsage() + m_mOriginalDesc.m_PermutationVars.GetHeapMemoryUsage() +
-                                            m_mOriginalDesc.m_Parameters.GetHeapMemoryUsage() + m_mOriginalDesc.m_Texture2DBindings.GetHeapMemoryUsage() + m_mOriginalDesc.m_TextureCubeBindings.GetHeapMemoryUsage());
+    sizeof(ezMaterialResource) + (ezUInt32)(m_mDesc.m_PermutationVars.GetHeapMemoryUsage() + m_mDesc.m_Parameters.GetHeapMemoryUsage() + m_mDesc.m_Texture2DBindings.GetHeapMemoryUsage() + m_mDesc.m_TextureCubeBindings.GetHeapMemoryUsage() + m_mDesc.m_Texture3DBindings.GetHeapMemoryUsage() +
+                                            m_mOriginalDesc.m_PermutationVars.GetHeapMemoryUsage() + m_mOriginalDesc.m_Parameters.GetHeapMemoryUsage() + m_mOriginalDesc.m_Texture2DBindings.GetHeapMemoryUsage() + m_mOriginalDesc.m_TextureCubeBindings.GetHeapMemoryUsage() + m_mOriginalDesc.m_Texture3DBindings.GetHeapMemoryUsage());
 
   out_NewMemoryUsage.m_uiMemoryGPU = 0;
 }
@@ -1109,6 +1110,11 @@ ezMaterialResource::CachedValues* ezMaterialResource::GetOrUpdateCachedValues()
     for (const auto& textureBinding : desc.m_TextureCubeBindings)
     {
       m_pCachedValues->m_TextureCubeBindings.Insert(textureBinding.m_Name, textureBinding.m_Value);
+    }
+
+    for(const auto& textureBinding : desc.m_Texture3DBindings)
+    {
+      m_pCachedValues->m_Texture3DBindings.Insert(textureBinding.m_Name, textureBinding.m_Value);
     }
   }
 

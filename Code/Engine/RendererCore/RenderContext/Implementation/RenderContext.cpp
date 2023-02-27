@@ -1146,6 +1146,11 @@ ezMaterialResource* ezRenderContext::ApplyMaterialState()
       BindTextureCube(it.Key(), it.Value());
     }
 
+    for(auto it = pCachedValues->m_Texture3DBindings.GetIterator(); it.IsValid(); ++it)
+    {
+      BindTexture3D(it.Key(), it.Value());
+    }
+
     m_hMaterial = m_hNewMaterial;
   }
 

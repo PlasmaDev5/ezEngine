@@ -19,6 +19,7 @@ EZ_BEGIN_COMPONENT_TYPE(ezFollowPathComponent, 1, ezComponentMode::Dynamic)
     EZ_ACCESSOR_PROPERTY("Running", IsRunning, SetRunning)->AddAttributes(new ezDefaultValueAttribute(true)), // Whether the animation should start right away.
     EZ_ENUM_MEMBER_PROPERTY("Mode", ezPropertyAnimMode, m_Mode),
     EZ_MEMBER_PROPERTY("Speed", m_fSpeed)->AddAttributes(new ezDefaultValueAttribute(1.0f)),
+    EZ_MEMBER_PROPERTY("OnlyPosition", m_bPositionOnly),
     EZ_MEMBER_PROPERTY("LookAhead", m_fLookAhead)->AddAttributes(new ezDefaultValueAttribute(1.0f), new ezClampValueAttribute(0.0f, 10.0f)),
     EZ_MEMBER_PROPERTY("Smoothing", m_fSmoothing)->AddAttributes(new ezDefaultValueAttribute(0.5f), new ezClampValueAttribute(0.0f, 1.0f)),
   }
@@ -125,15 +126,6 @@ void ezFollowPathComponent::Update(bool bForce)
     transformAhead.m_vPosition = ezMath::Lerp(transformAhead.m_vPosition, m_vLastTargetPosition, fSmoothing);
   }
 
-  ezVec3 vTarget = transformAhead.m_vPosition - transform.m_vPosition;
-  vTarget.NormalizeIfNotZero(ezVec3::UnitXAxis()).IgnoreResult();
-
-  ezVec3 vUp = transform.m_vUpDirection;
-  ezVec3 vRight = vTarget.CrossRH(vUp);
-  vRight.NormalizeIfNotZero(ezVec3::UnitYAxis()).IgnoreResult();
-  vUp = vRight.CrossRH(vTarget);
-  vUp.NormalizeIfNotZero(ezVec3::UnitZAxis()).IgnoreResult();
-
   {
     m_bLastStateValid = true;
     m_vLastPosition = transform.m_vPosition;
@@ -141,15 +133,32 @@ void ezFollowPathComponent::Update(bool bForce)
     m_vLastTargetPosition = transformAhead.m_vPosition;
   }
 
-  ezMat3 mRot;
-  mRot.SetColumn(0, vTarget);
-  mRot.SetColumn(1, -vRight);
-  mRot.SetColumn(2, vUp);
-
   ezTransform tFinal;
   tFinal.m_vPosition = transform.m_vPosition;
   tFinal.m_vScale.Set(1);
-  tFinal.m_qRotation.SetFromMat3(mRot);
+
+  if (m_bPositionOnly)
+  {
+    tFinal.m_qRotation = GetOwner()->GetGlobalRotation();
+  }
+  else
+  {
+    ezVec3 vTarget = transformAhead.m_vPosition - transform.m_vPosition;
+    vTarget.NormalizeIfNotZero(ezVec3::UnitXAxis()).IgnoreResult();
+
+    ezVec3 vUp = transform.m_vUpDirection;
+    ezVec3 vRight = vTarget.CrossRH(vUp);
+    vRight.NormalizeIfNotZero(ezVec3::UnitYAxis()).IgnoreResult();
+    vUp = vRight.CrossRH(vTarget);
+    vUp.NormalizeIfNotZero(ezVec3::UnitZAxis()).IgnoreResult();
+
+    ezMat3 mRot;
+    mRot.SetColumn(0, vTarget);
+    mRot.SetColumn(1, -vRight);
+    mRot.SetColumn(2, vUp);
+
+    tFinal.m_qRotation.SetFromMat3(mRot);
+  }
 
   GetOwner()->SetGlobalTransform(pPathObject->GetGlobalTransform() * tFinal);
 }
@@ -216,6 +225,7 @@ void ezFollowPathComponent::SerializeComponent(ezWorldWriter& stream) const
   s << m_fSmoothing;
   s << m_bIsRunning;
   s << m_bIsRunningForwards;
+  s << m_bPositionOnly;
 }
 
 void ezFollowPathComponent::DeserializeComponent(ezWorldReader& stream)
@@ -233,6 +243,7 @@ void ezFollowPathComponent::DeserializeComponent(ezWorldReader& stream)
   s >> m_fSmoothing;
   s >> m_bIsRunning;
   s >> m_bIsRunningForwards;
+  s >> m_bPositionOnly;
 }
 
 void ezFollowPathComponent::OnActivated()

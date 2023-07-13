@@ -28,7 +28,12 @@ public:
   ezAiComponent();
   ~ezAiComponent();
 
+  bool m_bDebugInfo = false;
 
 protected:
   ezAiCommandQueue m_CommandQueue;
+
+  ezAiCommandWait m_CmdWait;
+  ezAiCommandTurn m_CmdTurn;
+  ezAiCommandSlide m_CmdSlide;
 };

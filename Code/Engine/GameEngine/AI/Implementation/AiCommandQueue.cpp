@@ -9,10 +9,10 @@ ezAiCommandQueue::~ezAiCommandQueue() = default;
 
 void ezAiCommandQueue::Cancel(ezGameObject* pOwner)
 {
-  if (IsEmpty())
-    return;
-
-  m_Queue[0]->Cancel(pOwner);
+  for (ezUInt32 i = 0; i < m_Queue.GetCount(); ++i)
+  {
+    m_Queue[i]->Cancel(pOwner);
+  }
 }
 
 void ezAiCommandQueue::ClearQueue()
@@ -54,8 +54,7 @@ void ezAiCommandQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
       pCmd->GetDebugDesc(str);
       ezLog::Error("AI cmd failed: {}", str);
 
-      ClearQueue();
-      return;
+      Cancel(pOwner);
     }
 
     pCmd->Destroy();

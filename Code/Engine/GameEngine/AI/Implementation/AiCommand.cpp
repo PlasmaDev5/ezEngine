@@ -3,6 +3,7 @@
 #include <Core/World/GameObject.h>
 #include <Core/World/World.h>
 #include <GameEngine/AI/AiCommand.h>
+#include <GameEngine/Gameplay/BlackboardComponent.h>
 
 ezAiCommand::ezAiCommand() = default;
 ezAiCommand::~ezAiCommand() = default;
@@ -262,4 +263,94 @@ ezAiCommandResult ezAiCommandFollowPath::Execute(ezGameObject* pOwner, ezTime tD
 void ezAiCommandFollowPath::Cancel(ezGameObject* pOwner)
 {
   m_hPath.Invalidate();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+EZ_IMPLEMENT_AICMD(ezAiCommandSetBlackboardEntry);
+
+ezAiCommandSetBlackboardEntry::ezAiCommandSetBlackboardEntry() = default;
+ezAiCommandSetBlackboardEntry::~ezAiCommandSetBlackboardEntry() = default;
+
+void ezAiCommandSetBlackboardEntry::Reset()
+{
+  m_sEntryName.Clear();
+  m_Value = {};
+}
+
+void ezAiCommandSetBlackboardEntry::GetDebugDesc(ezStringBuilder& inout_sText)
+{
+  inout_sText.Format("Set Blackboard Entry '{}' to '{}'", m_sEntryName.GetHash(), m_Value);
+}
+
+ezAiCommandResult ezAiCommandSetBlackboardEntry::Execute(ezGameObject* pOwner, ezTime tDiff)
+{
+  if (m_sEntryName.IsEmpty())
+    return ezAiCommandResult::Finished; // or canceled
+
+  auto pBlackboard = ezBlackboardComponent::FindBlackboard(pOwner);
+
+  if (pBlackboard == nullptr)
+  {
+    return ezAiCommandResult::Failed;
+  }
+
+  if (pBlackboard->SetEntryValue(m_sEntryName, m_Value).Failed())
+    return ezAiCommandResult::Failed;
+
+  return ezAiCommandResult::Finished;
+}
+
+void ezAiCommandSetBlackboardEntry::Cancel(ezGameObject* pOwner)
+{
+  Reset();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+EZ_IMPLEMENT_AICMD(ezAiCommandWaitForBlackboardEntry);
+
+ezAiCommandWaitForBlackboardEntry::ezAiCommandWaitForBlackboardEntry() = default;
+ezAiCommandWaitForBlackboardEntry::~ezAiCommandWaitForBlackboardEntry() = default;
+
+void ezAiCommandWaitForBlackboardEntry::Reset()
+{
+  m_sEntryName.Clear();
+  m_Value = {};
+  m_bEquals = true;
+}
+
+void ezAiCommandWaitForBlackboardEntry::GetDebugDesc(ezStringBuilder& inout_sText)
+{
+  inout_sText.Format("Wait for Blackboard Entry '{}' {} '{}'", m_sEntryName.GetHash(), m_bEquals ? "==" : "!=", m_Value);
+}
+
+ezAiCommandResult ezAiCommandWaitForBlackboardEntry::Execute(ezGameObject* pOwner, ezTime tDiff)
+{
+  if (m_sEntryName.IsEmpty())
+    return ezAiCommandResult::Finished; // or canceled
+
+  auto pBlackboard = ezBlackboardComponent::FindBlackboard(pOwner);
+
+  if (pBlackboard == nullptr)
+  {
+    return ezAiCommandResult::Failed;
+  }
+
+  const ezVariant val = pBlackboard->GetEntryValue(m_sEntryName, m_Value);
+  const bool bIsEqual = (val == m_Value);
+
+  if (m_bEquals == bIsEqual)
+    return ezAiCommandResult::Finished;
+
+  return ezAiCommandResult::Succeded;
+}
+
+void ezAiCommandWaitForBlackboardEntry::Cancel(ezGameObject* pOwner)
+{
+  Reset();
 }

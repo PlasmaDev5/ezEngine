@@ -11,20 +11,22 @@ o
 		s %AssetType{"Scene"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{332678910050156717,5413383538482065259}}
-		u4 %Hash{8783938848094478774}
+		u4 %Hash{6823757414353301053}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps
 		{
+			s{"{ 032e2443-bc4e-4d94-9a99-1743d8335e1b }"}
 			s{"{ 6240a925-6584-48c5-8559-6981f5d9bedd }"}
 			s{"{ 700252a3-0f42-4bdf-9a4e-acb2ea759784 }"}
-			s{"{ bfdc9c4a-b7d9-41f1-81e2-8d971b6db0ef }"}
+			s{"{ 95277fc8-96b9-4c58-a203-56ae33cf905d }"}
 		}
 		VarArray %References
 		{
+			s{"{ 032e2443-bc4e-4d94-9a99-1743d8335e1b }"}
 			s{"{ 6240a925-6584-48c5-8559-6981f5d9bedd }"}
 			s{"{ 700252a3-0f42-4bdf-9a4e-acb2ea759784 }"}
-			s{"{ bfdc9c4a-b7d9-41f1-81e2-8d971b6db0ef }"}
+			s{"{ 95277fc8-96b9-4c58-a203-56ae33cf905d }"}
 		}
 	}
 }
@@ -273,7 +275,7 @@ o
 	p
 	{
 		b %Active{1}
-		b %DebugInfo{0}
+		b %DebugInfo{1}
 	}
 }
 o
@@ -351,6 +353,21 @@ o
 }
 o
 {
+	Uuid %id{u4{13034180444989953708,4959987830567630034}}
+	s %t{"ezBlackboardComponent"}
+	u3 %v{2}
+	p
+	{
+		b %Active{1}
+		s %BlackboardName{""}
+		VarArray %Entries{}
+		b %SendEntryChangedMessage{0}
+		b %ShowDebugInfo{0}
+		s %Template{"{ 95277fc8-96b9-4c58-a203-56ae33cf905d }"}
+	}
+}
+o
+{
 	Uuid %id{u4{12911521238692429247,4981551103268610556}}
 	s %t{"ezPathNodeComponent"}
 	u3 %v{1}
@@ -395,6 +412,19 @@ o
 	p
 	{
 		Uuid %Layer{u4{15036442609172644244,4759523109657735372}}
+	}
+}
+o
+{
+	Uuid %id{u4{4006081343225685419,5100180456199102710}}
+	s %t{"ezAnimationControllerComponent"}
+	u3 %v{2}
+	p
+	{
+		b %Active{1}
+		s %AnimGraph{"{ 032e2443-bc4e-4d94-9a99-1743d8335e1b }"}
+		s %InvisibleUpdateRate{"ezAnimationInvisibleUpdateRate::Max5FPS"}
+		s %RootMotionMode{"ezRootMotionMode::Ignore"}
 	}
 }
 o
@@ -472,11 +502,12 @@ o
 		VarArray %Components
 		{
 			Uuid{u4{13446101534881827261,5410440219061776821}}
-			Uuid{u4{2568977002175596729,5495221988780495058}}
 			Uuid{u4{3976746985400955265,4658619278715476686}}
+			Uuid{u4{4006081343225685419,5100180456199102710}}
+			Uuid{u4{13034180444989953708,4959987830567630034}}
 		}
 		s %GlobalKey{""}
-		Vec3 %LocalPosition{f{0x00003841,0,0}}
+		Vec3 %LocalPosition{f{0x00003041,0,0}}
 		Quat %LocalRotation{f{0,0,0x000080BF,0x6921A233}}
 		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
 		f %LocalUniformScaling{0x0000803F}
@@ -523,21 +554,6 @@ o
 			s{"7"}
 			s{"8"}
 		}
-	}
-}
-o
-{
-	Uuid %id{u4{2568977002175596729,5495221988780495058}}
-	s %t{"ezSimpleAnimationComponent"}
-	u3 %v{2}
-	p
-	{
-		b %Active{1}
-		s %AnimationClip{"{ bfdc9c4a-b7d9-41f1-81e2-8d971b6db0ef }"}
-		s %AnimationMode{"ezPropertyAnimMode::Loop"}
-		s %InvisibleUpdateRate{"ezAnimationInvisibleUpdateRate::Max5FPS"}
-		s %RootMotionMode{"ezRootMotionMode::Ignore"}
-		f %Speed{0x0000803F}
 	}
 }
 o
@@ -1407,23 +1423,6 @@ Types
 {
 o
 {
-	Uuid %id{u4{16492723009378139380,540909537214531894}}
-	s %t{"ezReflectedTypeDescriptor"}
-	u3 %v{1}
-	p
-	{
-		VarArray %Attributes{}
-		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
-		VarArray %Functions{}
-		s %ParentTypeName{"ezComponent"}
-		s %PluginName{"Static"}
-		VarArray %Properties{}
-		s %TypeName{"ezSimpleAnimationComponent"}
-		u3 %TypeVersion{2}
-	}
-}
-o
-{
 	Uuid %id{u4{6914292285925798136,1108246313736053318}}
 	s %t{"ezReflectedTypeDescriptor"}
 	u3 %v{1}
@@ -1526,6 +1525,23 @@ o
 }
 o
 {
+	Uuid %id{u4{10915434802948687564,6393886782732208983}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{"ezComponent"}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezBlackboardComponent"}
+		u3 %TypeVersion{2}
+	}
+}
+o
+{
 	Uuid %id{u4{342754006916086506,6664822790827848645}}
 	s %t{"ezReflectedTypeDescriptor"}
 	u3 %v{1}
@@ -1556,6 +1572,23 @@ o
 		VarArray %Properties{}
 		s %TypeName{"ezMeshComponentBase"}
 		u3 %TypeVersion{3}
+	}
+}
+o
+{
+	Uuid %id{u4{3793674575974708228,6951555356482165156}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{"ezComponent"}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezAnimationControllerComponent"}
+		u3 %TypeVersion{2}
 	}
 }
 o
@@ -1606,23 +1639,6 @@ o
 		s %PluginName{"Static"}
 		VarArray %Properties{}
 		s %TypeName{"ezBitflagsBase"}
-		u3 %TypeVersion{1}
-	}
-}
-o
-{
-	Uuid %id{u4{12435145686180634860,8288333427582851889}}
-	s %t{"ezReflectedTypeDescriptor"}
-	u3 %v{1}
-	p
-	{
-		VarArray %Attributes{}
-		s %Flags{"ezTypeFlags::IsEnum|ezTypeFlags::Minimal"}
-		VarArray %Functions{}
-		s %ParentTypeName{"ezEnumBase"}
-		s %PluginName{"Static"}
-		VarArray %Properties{}
-		s %TypeName{"ezPropertyAnimMode"}
 		u3 %TypeVersion{1}
 	}
 }
@@ -1691,6 +1707,23 @@ o
 		s %PluginName{"Static"}
 		VarArray %Properties{}
 		s %TypeName{"ezPathComponent"}
+		u3 %TypeVersion{1}
+	}
+}
+o
+{
+	Uuid %id{u4{4287215348751137938,10033073971716187673}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Bitflags|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{"ezBitflagsBase"}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezBlackboardEntryFlags"}
 		u3 %TypeVersion{1}
 	}
 }
@@ -1810,6 +1843,23 @@ o
 		s %PluginName{"Static"}
 		VarArray %Properties{}
 		s %TypeName{"ezPathNodeComponent"}
+		u3 %TypeVersion{1}
+	}
+}
+o
+{
+	Uuid %id{u4{48220615166662949,15649640188828373689}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{""}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezBlackboardEntry"}
 		u3 %TypeVersion{1}
 	}
 }

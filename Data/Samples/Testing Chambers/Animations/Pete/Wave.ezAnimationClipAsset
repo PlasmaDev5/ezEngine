@@ -14,7 +14,7 @@ o
 			s{"Animations/Pete/Pete.glb"}
 		}
 		Uuid %DocumentID{u4{12166247825455026582,5232126330513722895}}
-		u4 %Hash{17213740649597632857}
+		u4 %Hash{17335770046775431096}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps{}
@@ -44,7 +44,7 @@ o
 	u3 %v{3}
 	p
 	{
-		b %Additive{0}
+		b %Additive{1}
 		VarArray %AvailableClips
 		{
 			s{"Gun Hold Pose"}
@@ -67,7 +67,7 @@ o
 		u3 %FirstFrame{0}
 		u3 %NumFrames{0}
 		s %PreviewMesh{"{ 6240a925-6584-48c5-8559-6981f5d9bedd }"}
-		s %RootMotion{"ezRootMotionSource::Constant"}
+		s %RootMotion{"ezRootMotionSource::None"}
 		s %UseAnimationClip{"Wave"}
 	}
 }

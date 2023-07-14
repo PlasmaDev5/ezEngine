@@ -140,7 +140,6 @@ void ezAiCommandSlide::Cancel(ezGameObject* pOwner)
   m_vLocalSpaceSlide.SetZero();
 }
 
-
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -215,4 +214,42 @@ ezAiCommandResult ezAiCommandTurnTowards::Execute(ezGameObject* pOwner, ezTime t
 void ezAiCommandTurnTowards::Cancel(ezGameObject* pOwner)
 {
   m_TurnAnglesPerSec = {};
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+ezAiCommandFollowPath::ezAiCommandFollowPath() = default;
+ezAiCommandFollowPath::~ezAiCommandFollowPath() = default;
+
+void ezAiCommandFollowPath::Reset()
+{
+  m_fSpeed = 0.0f;
+  m_hPath.Invalidate();
+}
+
+void ezAiCommandFollowPath::GetDebugDesc(ezStringBuilder& inout_sText)
+{
+  inout_sText.Format("Follow Path: @{}/sec", m_fSpeed);
+}
+
+ezAiCommandResult ezAiCommandFollowPath::Execute(ezGameObject* pOwner, ezTime tDiff)
+{
+  if (m_hPath.IsInvalidated())
+    return ezAiCommandResult::Finished; // or canceled
+
+  ezGameObject* pPath;
+  if (!pOwner->GetWorld()->TryGetObject(m_hPath, pPath))
+  {
+    return ezAiCommandResult::Failed;
+  }
+
+
+  return ezAiCommandResult::Succeded;
+}
+
+void ezAiCommandFollowPath::Cancel(ezGameObject* pOwner)
+{
+  m_hPath.Invalidate();
 }

@@ -84,3 +84,18 @@ public:
   ezAngle m_TargetReachedAngle = ezAngle::Degree(5);
   ezAngle m_TurnAnglesPerSec;
 };
+
+class EZ_GAMEENGINE_DLL ezAiCommandFollowPath : public ezAiCommand
+{
+public:
+  ezAiCommandFollowPath();
+  ~ezAiCommandFollowPath();
+
+  virtual void Reset() override;
+  virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
+  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual void Cancel(ezGameObject* pOwner) override;
+
+  ezGameObjectHandle m_hPath;
+  float m_fSpeed = 0.0f;
+};

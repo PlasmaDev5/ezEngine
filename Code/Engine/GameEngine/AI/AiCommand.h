@@ -67,3 +67,20 @@ public:
   float m_fSpeed = 0.0f;
   ezVec3 m_vLocalSpaceSlide = ezVec3::ZeroVector();
 };
+
+class EZ_GAMEENGINE_DLL ezAiCommandTurnTowards : public ezAiCommand
+{
+public:
+  ezAiCommandTurnTowards();
+  ~ezAiCommandTurnTowards();
+
+  virtual void Reset() override;
+  virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
+  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual void Cancel(ezGameObject* pOwner) override;
+
+  ezVec3 m_vTargetPosition = ezVec3::ZeroVector();
+  ezGameObjectHandle m_hTargetObject;
+  ezAngle m_TargetReachedAngle = ezAngle::Degree(5);
+  ezAngle m_TurnAnglesPerSec;
+};

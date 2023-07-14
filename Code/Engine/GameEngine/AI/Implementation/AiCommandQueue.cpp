@@ -7,10 +7,23 @@
 ezAiCommandQueue::ezAiCommandQueue() = default;
 ezAiCommandQueue::~ezAiCommandQueue() = default;
 
-// void ezAiCommandQueue::Clear()
-//{
-//   m_Queue.Clear();
-// }
+void ezAiCommandQueue::Cancel(ezGameObject* pOwner)
+{
+  if (IsEmpty())
+    return;
+
+  m_Queue[0]->Cancel(pOwner);
+}
+
+void ezAiCommandQueue::ClearQueue()
+{
+  for (auto pCmd : m_Queue)
+  {
+    pCmd->Reset();
+  }
+
+  m_Queue.Clear();
+}
 
 bool ezAiCommandQueue::IsEmpty() const
 {
@@ -35,16 +48,18 @@ void ezAiCommandQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
     if (res == ezAiCommandResult::Succeded)
       return;
 
-    pCmd->Reset();
-    m_Queue.RemoveAtAndCopy(0);
-
     if (res == ezAiCommandResult::Failed)
     {
       ezStringBuilder str;
       pCmd->GetDebugDesc(str);
-
       ezLog::Error("AI cmd failed: {}", str);
+
+      ClearQueue();
+      return;
     }
+
+    pCmd->Reset();
+    m_Queue.RemoveAtAndCopy(0);
   }
 }
 

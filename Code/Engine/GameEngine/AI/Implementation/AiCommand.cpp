@@ -1,6 +1,7 @@
 #include <GameEngine/GameEnginePCH.h>
 
 #include <Core/World/GameObject.h>
+#include <Core/World/World.h>
 #include <GameEngine/AI/AiCommand.h>
 
 ezAiCommand::ezAiCommand() = default;
@@ -137,4 +138,81 @@ void ezAiCommandSlide::Cancel(ezGameObject* pOwner)
 {
   m_fSpeed = 0.0f;
   m_vLocalSpaceSlide.SetZero();
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+ezAiCommandTurnTowards::ezAiCommandTurnTowards() = default;
+ezAiCommandTurnTowards::~ezAiCommandTurnTowards() = default;
+
+void ezAiCommandTurnTowards::Reset()
+{
+  m_vTargetPosition = ezVec3::ZeroVector();
+  m_hTargetObject.Invalidate();
+  m_TurnAnglesPerSec = {};
+}
+
+void ezAiCommandTurnTowards::GetDebugDesc(ezStringBuilder& inout_sText)
+{
+  inout_sText.Format("Turn Towards: {}/{}/{} - @{}/sec", m_vTargetPosition.x, m_vTargetPosition.y, m_vTargetPosition.z, m_TurnAnglesPerSec);
+}
+
+ezAiCommandResult ezAiCommandTurnTowards::Execute(ezGameObject* pOwner, ezTime tDiff)
+{
+  if (m_TurnAnglesPerSec <= ezAngle())
+    return ezAiCommandResult::Finished; // or canceled
+
+  if (!m_hTargetObject.IsInvalidated())
+  {
+    ezGameObject* pTarget;
+    if (!pOwner->GetWorld()->TryGetObject(m_hTargetObject, pTarget))
+    {
+      return ezAiCommandResult::Failed;
+    }
+
+    m_vTargetPosition = pTarget->GetGlobalPosition();
+  }
+
+  const ezVec3 vOwnPos = pOwner->GetGlobalPosition();
+
+  ezVec3 vCurDir = pOwner->GetGlobalDirForwards();
+  vCurDir.z = 0.0f;
+
+  ezVec3 vTargetDir = m_vTargetPosition - vOwnPos;
+  vTargetDir.z = 0.0f;
+
+  m_vTargetPosition.z = vOwnPos.z;
+
+  if (vCurDir.NormalizeIfNotZero(ezVec3::ZeroVector()).Failed() ||
+      vTargetDir.NormalizeIfNotZero(ezVec3::ZeroVector()).Failed())
+  {
+    return ezAiCommandResult::Failed;
+  }
+
+  const ezAngle turnAngle = vCurDir.GetAngleBetween(vTargetDir);
+
+  const ezVec3 vTurnAxis = vCurDir.CrossRH(vTargetDir).GetNormalized();
+
+  const ezAngle turnAmount = tDiff.AsFloatInSeconds() * m_TurnAnglesPerSec;
+  const ezAngle toTurn = ezMath::Min(turnAngle, turnAmount);
+
+  ezQuat qRot;
+  qRot.SetFromAxisAndAngle(vTurnAxis, toTurn);
+
+  const ezQuat qCurRot = pOwner->GetGlobalRotation();
+
+  pOwner->SetGlobalRotation(qRot * qCurRot);
+
+  if (turnAngle - toTurn <= m_TargetReachedAngle)
+    return ezAiCommandResult::Finished;
+
+  return ezAiCommandResult::Succeded;
+}
+
+void ezAiCommandTurnTowards::Cancel(ezGameObject* pOwner)
+{
+  m_TurnAnglesPerSec = {};
 }

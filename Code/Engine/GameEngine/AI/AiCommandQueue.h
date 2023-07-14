@@ -8,7 +8,8 @@ public:
   ezAiCommandQueue();
   ~ezAiCommandQueue();
 
-  // void Clear();
+  void Cancel(ezGameObject* pOwner);
+
   bool IsEmpty() const;
 
   void AddCommand(ezAiCommand* pCommand);
@@ -18,5 +19,7 @@ public:
   void PrintDebugInfo(ezGameObject* pOwner);
 
 private:
+  void ClearQueue();
+
   ezHybridArray<ezAiCommand*, 16> m_Queue;
 };

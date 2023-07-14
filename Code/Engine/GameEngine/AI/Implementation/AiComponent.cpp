@@ -60,15 +60,23 @@ void ezAiComponent::Update()
     m_CmdWait.m_Duration = ezTime::Seconds(rng.DoubleMinMax(0.1, 1.0));
     m_CommandQueue.AddCommand(&m_CmdWait);
 
-    m_CmdTurn.m_vTurnAxis.Set(0, 0, 1);
-    m_CmdTurn.m_TurnAnglesPerSec = ezAngle::Degree(rng.DoubleMinMax(20.0f, 90.0f));
-    m_CmdTurn.m_TurnAngle = ezAngle::Degree(rng.DoubleMinMax(-90.0f, 90.0f));
-    m_CommandQueue.AddCommand(&m_CmdTurn);
+    //m_CmdTurn.m_vTurnAxis.Set(0, 0, 1);
+    //m_CmdTurn.m_TurnAnglesPerSec = ezAngle::Degree(rng.DoubleMinMax(20.0f, 90.0f));
+    //m_CmdTurn.m_TurnAngle = ezAngle::Degree(rng.DoubleMinMax(-90.0f, 90.0f));
+    //m_CommandQueue.AddCommand(&m_CmdTurn);
 
     m_CmdSlide.m_vLocalSpaceSlide.x = rng.DoubleMinMax(-1.0, 1.0);
     // m_CmdSlide.m_vLocalSpaceSlide.y = rng.DoubleMinMax(-0.5, 0.5);
     m_CmdSlide.m_fSpeed = rng.DoubleMinMax(0.25, 2.0);
     m_CommandQueue.AddCommand(&m_CmdSlide);
+
+    ezGameObject* pPlayer;
+    if (GetWorld()->TryGetObjectWithGlobalKey("Player", pPlayer))
+    {
+      m_CmdTurnTowards.m_hTargetObject = pPlayer->GetHandle();
+      m_CmdTurnTowards.m_TurnAnglesPerSec = ezAngle::Degree(90);
+      m_CommandQueue.AddCommand(&m_CmdTurnTowards);
+    }
   }
 
   m_CommandQueue.Execute(GetOwner(), GetWorld()->GetClock().GetTimeDiff());

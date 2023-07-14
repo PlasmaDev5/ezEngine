@@ -51,6 +51,13 @@ void ezAiComponent::OnSimulationStarted()
   SUPER::OnSimulationStarted();
 }
 
+void ezAiComponent::OnDeactivated()
+{
+  m_CommandQueue.ClearQueue();
+
+  SUPER::OnDeactivated();
+}
+
 void ezAiComponent::Update()
 {
   if (m_CommandQueue.IsEmpty())
@@ -58,51 +65,71 @@ void ezAiComponent::Update()
     ezRandom& rng = GetWorld()->GetRandomNumberGenerator();
 
     {
-      ezAiCommandWait* pCmd = ezAiCommandWait::Create();
+      auto* pCmd = ezAiCmdWait::Create();
       pCmd->m_Duration = ezTime::Seconds(rng.DoubleMinMax(0.5, 1.0));
       m_CommandQueue.AddCommand(pCmd);
     }
 
-    // ezAiCommandTurn* pCmd = ezAiCommandTurn::Create();
+    // ezAiCmdLerpRotation* pCmd = ezAiCmdLerpRotation::Create();
     // pCmd->m_vTurnAxis.Set(0, 0, 1);
     // pCmd->m_TurnAnglesPerSec = ezAngle::Degree(rng.DoubleMinMax(20.0f, 90.0f));
     // pCmd->m_TurnAngle = ezAngle::Degree(rng.DoubleMinMax(-90.0f, 90.0f));
     // m_CommandQueue.AddCommand(pCmd);
 
-    {
-      ezAiCommandSlide* pCmd = ezAiCommandSlide::Create();
-      pCmd->m_vLocalSpaceSlide.x = rng.DoubleMinMax(-1.0, 1.0);
-      // m_CmdSlide.m_vLocalSpaceSlide.y = rng.DoubleMinMax(-0.5, 0.5);
-      pCmd->m_fSpeed = rng.DoubleMinMax(0.25, 2.0);
-      m_CommandQueue.AddCommand(pCmd);
-    }
+    //{
+    //  auto* pCmd = ezAiCmdLerpPosition::Create();
+    //  pCmd->m_vLocalSpaceSlide.x = rng.DoubleMinMax(-1.0, 1.0);
+    //  // m_CmdSlide.m_vLocalSpaceSlide.y = rng.DoubleMinMax(-0.5, 0.5);
+    //  pCmd->m_fSpeed = rng.DoubleMinMax(0.25, 2.0);
+    //  m_CommandQueue.AddCommand(pCmd);
+    //}
 
-    {
-      ezAiCommandWait* pCmd = ezAiCommandWait::Create();
-      pCmd->m_Duration = ezTime::Seconds(rng.DoubleMinMax(0.5, 1.0));
-      m_CommandQueue.AddCommand(pCmd);
-    }
+    //{
+    //  auto* pCmd = ezAiCmdWait::Create();
+    //  pCmd->m_Duration = ezTime::Seconds(rng.DoubleMinMax(0.5, 1.0));
+    //  m_CommandQueue.AddCommand(pCmd);
+    //}
 
     {
       ezGameObject* pPlayer;
       if (GetWorld()->TryGetObjectWithGlobalKey("Player", pPlayer))
       {
-        ezAiCommandTurnTowards* pCmd = ezAiCommandTurnTowards::Create();
-        pCmd->m_hTargetObject = pPlayer->GetHandle();
-        pCmd->m_TurnAnglesPerSec = ezAngle::Degree(90);
-        m_CommandQueue.AddCommand(pCmd);
+        {
+          auto* pCmd = ezAiCmdLerpRotationTowards::Create();
+          pCmd->m_hTargetObject = pPlayer->GetHandle();
+          pCmd->m_TurnAnglesPerSec = ezAngle::Degree(90);
+          m_CommandQueue.AddCommand(pCmd);
+        }
+        {
+          auto* pCmd = ezAiCmdBlackboardSetEntry::Create();
+          pCmd->m_sEntryName = ezTempHashedString("MoveForwards");
+          pCmd->m_Value = 1;
+          m_CommandQueue.AddCommand(pCmd);
+        }
+        {
+          auto* pCmd = ezAiCmdCCMoveTo::Create();
+          pCmd->m_hTargetObject = pPlayer->GetHandle();
+          pCmd->m_fSpeed = 1.0f;
+          m_CommandQueue.AddCommand(pCmd);
+        }
+        {
+          auto* pCmd = ezAiCmdBlackboardSetEntry::Create();
+          pCmd->m_sEntryName = ezTempHashedString("MoveForwards");
+          pCmd->m_Value = 0;
+          m_CommandQueue.AddCommand(pCmd);
+        }
       }
     }
 
     {
-      ezAiCommandSetBlackboardEntry* pCmd = ezAiCommandSetBlackboardEntry::Create();
+      auto* pCmd = ezAiCmdBlackboardSetEntry::Create();
       pCmd->m_sEntryName = ezTempHashedString("Wave");
       pCmd->m_Value = 1;
       m_CommandQueue.AddCommand(pCmd);
     }
 
     {
-      ezAiCommandWaitForBlackboardEntry* pCmd = ezAiCommandWaitForBlackboardEntry::Create();
+      auto* pCmd = ezAiCmdBlackboardWait::Create();
       pCmd->m_sEntryName = ezTempHashedString("Wave");
       pCmd->m_Value = 0;
       m_CommandQueue.AddCommand(pCmd);

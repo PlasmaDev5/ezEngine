@@ -4,39 +4,40 @@
 #include <Core/World/World.h>
 #include <GameEngine/AI/AiCommand.h>
 #include <GameEngine/Gameplay/BlackboardComponent.h>
+#include <GameEngine/Physics/CharacterControllerComponent.h>
 
-ezAiCommand::ezAiCommand() = default;
-ezAiCommand::~ezAiCommand() = default;
+ezAiCmd::ezAiCmd() = default;
+ezAiCmd::~ezAiCmd() = default;
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-EZ_IMPLEMENT_AICMD(ezAiCommandWait);
+EZ_IMPLEMENT_AICMD(ezAiCmdWait);
 
-ezAiCommandWait::ezAiCommandWait() = default;
-ezAiCommandWait::~ezAiCommandWait() = default;
+ezAiCmdWait::ezAiCmdWait() = default;
+ezAiCmdWait::~ezAiCmdWait() = default;
 
-void ezAiCommandWait::Reset()
+void ezAiCmdWait::Reset()
 {
   m_Duration = ezTime::Zero();
 }
 
-void ezAiCommandWait::GetDebugDesc(ezStringBuilder& inout_sText)
+void ezAiCmdWait::GetDebugDesc(ezStringBuilder& inout_sText)
 {
   inout_sText.Format("Wait: {}", m_Duration);
 }
 
-ezAiCommandResult ezAiCommandWait::Execute(ezGameObject* pOwner, ezTime tDiff)
+ezAiCmdResult ezAiCmdWait::Execute(ezGameObject* pOwner, ezTime tDiff)
 {
   if (tDiff >= m_Duration)
-    return ezAiCommandResult::Finished; // or canceled
+    return ezAiCmdResult::Finished; // or canceled
 
   m_Duration -= tDiff;
-  return ezAiCommandResult::Succeded;
+  return ezAiCmdResult::Succeded;
 }
 
-void ezAiCommandWait::Cancel(ezGameObject* pOwner)
+void ezAiCmdWait::Cancel(ezGameObject* pOwner)
 {
   m_Duration = ezTime::Zero();
 }
@@ -45,27 +46,27 @@ void ezAiCommandWait::Cancel(ezGameObject* pOwner)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-EZ_IMPLEMENT_AICMD(ezAiCommandTurn);
+EZ_IMPLEMENT_AICMD(ezAiCmdLerpRotation);
 
-ezAiCommandTurn::ezAiCommandTurn() = default;
-ezAiCommandTurn::~ezAiCommandTurn() = default;
+ezAiCmdLerpRotation::ezAiCmdLerpRotation() = default;
+ezAiCmdLerpRotation::~ezAiCmdLerpRotation() = default;
 
-void ezAiCommandTurn::Reset()
+void ezAiCmdLerpRotation::Reset()
 {
   m_vTurnAxis = ezVec3::UnitZAxis();
   m_TurnAngle = {};
   m_TurnAnglesPerSec = {};
 }
 
-void ezAiCommandTurn::GetDebugDesc(ezStringBuilder& inout_sText)
+void ezAiCmdLerpRotation::GetDebugDesc(ezStringBuilder& inout_sText)
 {
   inout_sText.Format("Turn: {}/{}/{} - {} @ {}/sec", m_vTurnAxis.x, m_vTurnAxis.y, m_vTurnAxis.z, m_TurnAngle, m_TurnAnglesPerSec);
 }
 
-ezAiCommandResult ezAiCommandTurn::Execute(ezGameObject* pOwner, ezTime tDiff)
+ezAiCmdResult ezAiCmdLerpRotation::Execute(ezGameObject* pOwner, ezTime tDiff)
 {
   if (m_TurnAnglesPerSec <= ezAngle())
-    return ezAiCommandResult::Finished; // or canceled
+    return ezAiCmdResult::Finished; // or canceled
 
   if (m_TurnAngle < ezAngle())
   {
@@ -84,13 +85,13 @@ ezAiCommandResult ezAiCommandTurn::Execute(ezGameObject* pOwner, ezTime tDiff)
   pOwner->SetGlobalRotation(qRot * qCurRot);
 
   if (turnAmount >= m_TurnAngle)
-    return ezAiCommandResult::Finished;
+    return ezAiCmdResult::Finished;
 
   m_TurnAngle -= toTurn;
-  return ezAiCommandResult::Succeded;
+  return ezAiCmdResult::Succeded;
 }
 
-void ezAiCommandTurn::Cancel(ezGameObject* pOwner)
+void ezAiCmdLerpRotation::Cancel(ezGameObject* pOwner)
 {
   m_TurnAnglesPerSec = {};
 }
@@ -99,29 +100,29 @@ void ezAiCommandTurn::Cancel(ezGameObject* pOwner)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-EZ_IMPLEMENT_AICMD(ezAiCommandSlide);
+EZ_IMPLEMENT_AICMD(ezAiCmdLerpPosition);
 
-ezAiCommandSlide::ezAiCommandSlide() = default;
-ezAiCommandSlide::~ezAiCommandSlide() = default;
+ezAiCmdLerpPosition::ezAiCmdLerpPosition() = default;
+ezAiCmdLerpPosition::~ezAiCmdLerpPosition() = default;
 
-void ezAiCommandSlide::Reset()
+void ezAiCmdLerpPosition::Reset()
 {
   m_fSpeed = 0.0f;
   m_vLocalSpaceSlide = ezVec3::ZeroVector();
 }
 
-void ezAiCommandSlide::GetDebugDesc(ezStringBuilder& inout_sText)
+void ezAiCmdLerpPosition::GetDebugDesc(ezStringBuilder& inout_sText)
 {
   inout_sText.Format("Slide: {}/{}/{} @ {}/sec", m_vLocalSpaceSlide.x, m_vLocalSpaceSlide.y, m_vLocalSpaceSlide.z, m_fSpeed);
 }
 
-ezAiCommandResult ezAiCommandSlide::Execute(ezGameObject* pOwner, ezTime tDiff)
+ezAiCmdResult ezAiCmdLerpPosition::Execute(ezGameObject* pOwner, ezTime tDiff)
 {
   if (m_vLocalSpaceSlide.IsZero())
-    return ezAiCommandResult::Finished; // or canceled
+    return ezAiCmdResult::Finished; // or canceled
 
   if (m_fSpeed <= 0.0f)
-    return ezAiCommandResult::Failed;
+    return ezAiCmdResult::Failed;
 
   ezVec3 vSlideDir = m_vLocalSpaceSlide;
   const float fMaxSlide = vSlideDir.GetLengthAndNormalize();
@@ -135,13 +136,13 @@ ezAiCommandResult ezAiCommandSlide::Execute(ezGameObject* pOwner, ezTime tDiff)
   pOwner->SetGlobalPosition(vCurGlobalPos + pOwner->GetGlobalRotation() * vSlide);
 
   if (fSlideAmount >= fMaxSlide)
-    return ezAiCommandResult::Finished;
+    return ezAiCmdResult::Finished;
 
   m_vLocalSpaceSlide -= vSlide;
-  return ezAiCommandResult::Succeded;
+  return ezAiCmdResult::Succeded;
 }
 
-void ezAiCommandSlide::Cancel(ezGameObject* pOwner)
+void ezAiCmdLerpPosition::Cancel(ezGameObject* pOwner)
 {
   m_fSpeed = 0.0f;
   m_vLocalSpaceSlide.SetZero();
@@ -151,34 +152,34 @@ void ezAiCommandSlide::Cancel(ezGameObject* pOwner)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-EZ_IMPLEMENT_AICMD(ezAiCommandTurnTowards);
+EZ_IMPLEMENT_AICMD(ezAiCmdLerpRotationTowards);
 
-ezAiCommandTurnTowards::ezAiCommandTurnTowards() = default;
-ezAiCommandTurnTowards::~ezAiCommandTurnTowards() = default;
+ezAiCmdLerpRotationTowards::ezAiCmdLerpRotationTowards() = default;
+ezAiCmdLerpRotationTowards::~ezAiCmdLerpRotationTowards() = default;
 
-void ezAiCommandTurnTowards::Reset()
+void ezAiCmdLerpRotationTowards::Reset()
 {
   m_vTargetPosition = ezVec3::ZeroVector();
   m_hTargetObject.Invalidate();
   m_TurnAnglesPerSec = {};
 }
 
-void ezAiCommandTurnTowards::GetDebugDesc(ezStringBuilder& inout_sText)
+void ezAiCmdLerpRotationTowards::GetDebugDesc(ezStringBuilder& inout_sText)
 {
   inout_sText.Format("Turn Towards: {}/{}/{} - @{}/sec", m_vTargetPosition.x, m_vTargetPosition.y, m_vTargetPosition.z, m_TurnAnglesPerSec);
 }
 
-ezAiCommandResult ezAiCommandTurnTowards::Execute(ezGameObject* pOwner, ezTime tDiff)
+ezAiCmdResult ezAiCmdLerpRotationTowards::Execute(ezGameObject* pOwner, ezTime tDiff)
 {
   if (m_TurnAnglesPerSec <= ezAngle())
-    return ezAiCommandResult::Finished; // or canceled
+    return ezAiCmdResult::Finished; // or canceled
 
   if (!m_hTargetObject.IsInvalidated())
   {
     ezGameObject* pTarget;
     if (!pOwner->GetWorld()->TryGetObject(m_hTargetObject, pTarget))
     {
-      return ezAiCommandResult::Failed;
+      return ezAiCmdResult::Failed;
     }
 
     m_vTargetPosition = pTarget->GetGlobalPosition();
@@ -197,7 +198,7 @@ ezAiCommandResult ezAiCommandTurnTowards::Execute(ezGameObject* pOwner, ezTime t
   if (vCurDir.NormalizeIfNotZero(ezVec3::ZeroVector()).Failed() ||
       vTargetDir.NormalizeIfNotZero(ezVec3::ZeroVector()).Failed())
   {
-    return ezAiCommandResult::Failed;
+    return ezAiCmdResult::Failed;
   }
 
   const ezAngle turnAngle = vCurDir.GetAngleBetween(vTargetDir);
@@ -215,12 +216,12 @@ ezAiCommandResult ezAiCommandTurnTowards::Execute(ezGameObject* pOwner, ezTime t
   pOwner->SetGlobalRotation(qRot * qCurRot);
 
   if (turnAngle - toTurn <= m_TargetReachedAngle)
-    return ezAiCommandResult::Finished;
+    return ezAiCmdResult::Finished;
 
-  return ezAiCommandResult::Succeded;
+  return ezAiCmdResult::Succeded;
 }
 
-void ezAiCommandTurnTowards::Cancel(ezGameObject* pOwner)
+void ezAiCmdLerpRotationTowards::Cancel(ezGameObject* pOwner)
 {
   m_TurnAnglesPerSec = {};
 }
@@ -228,82 +229,82 @@ void ezAiCommandTurnTowards::Cancel(ezGameObject* pOwner)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
-
-EZ_IMPLEMENT_AICMD(ezAiCommandFollowPath);
-
-ezAiCommandFollowPath::ezAiCommandFollowPath() = default;
-ezAiCommandFollowPath::~ezAiCommandFollowPath() = default;
-
-void ezAiCommandFollowPath::Reset()
-{
-  m_fSpeed = 0.0f;
-  m_hPath.Invalidate();
-}
-
-void ezAiCommandFollowPath::GetDebugDesc(ezStringBuilder& inout_sText)
-{
-  inout_sText.Format("Follow Path: @{}/sec", m_fSpeed);
-}
-
-ezAiCommandResult ezAiCommandFollowPath::Execute(ezGameObject* pOwner, ezTime tDiff)
-{
-  if (m_hPath.IsInvalidated())
-    return ezAiCommandResult::Finished; // or canceled
-
-  ezGameObject* pPath;
-  if (!pOwner->GetWorld()->TryGetObject(m_hPath, pPath))
-  {
-    return ezAiCommandResult::Failed;
-  }
-
-
-  return ezAiCommandResult::Succeded;
-}
-
-void ezAiCommandFollowPath::Cancel(ezGameObject* pOwner)
-{
-  m_hPath.Invalidate();
-}
+//
+// EZ_IMPLEMENT_AICMD(ezAiCmdFollowPath);
+//
+// ezAiCmdFollowPath::ezAiCmdFollowPath() = default;
+// ezAiCmdFollowPath::~ezAiCmdFollowPath() = default;
+//
+// void ezAiCmdFollowPath::Reset()
+//{
+//  m_fSpeed = 0.0f;
+//  m_hPath.Invalidate();
+//}
+//
+// void ezAiCmdFollowPath::GetDebugDesc(ezStringBuilder& inout_sText)
+//{
+//  inout_sText.Format("Follow Path: @{}/sec", m_fSpeed);
+//}
+//
+// ezAiCmdResult ezAiCmdFollowPath::Execute(ezGameObject* pOwner, ezTime tDiff)
+//{
+//  if (m_hPath.IsInvalidated())
+//    return ezAiCmdResult::Finished; // or canceled
+//
+//  ezGameObject* pPath;
+//  if (!pOwner->GetWorld()->TryGetObject(m_hPath, pPath))
+//  {
+//    return ezAiCmdResult::Failed;
+//  }
+//
+//
+//  return ezAiCmdResult::Succeded;
+//}
+//
+// void ezAiCmdFollowPath::Cancel(ezGameObject* pOwner)
+//{
+//  m_hPath.Invalidate();
+//}
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-EZ_IMPLEMENT_AICMD(ezAiCommandSetBlackboardEntry);
+EZ_IMPLEMENT_AICMD(ezAiCmdBlackboardSetEntry);
 
-ezAiCommandSetBlackboardEntry::ezAiCommandSetBlackboardEntry() = default;
-ezAiCommandSetBlackboardEntry::~ezAiCommandSetBlackboardEntry() = default;
+ezAiCmdBlackboardSetEntry::ezAiCmdBlackboardSetEntry() = default;
+ezAiCmdBlackboardSetEntry::~ezAiCmdBlackboardSetEntry() = default;
 
-void ezAiCommandSetBlackboardEntry::Reset()
+void ezAiCmdBlackboardSetEntry::Reset()
 {
   m_sEntryName.Clear();
   m_Value = {};
 }
 
-void ezAiCommandSetBlackboardEntry::GetDebugDesc(ezStringBuilder& inout_sText)
+void ezAiCmdBlackboardSetEntry::GetDebugDesc(ezStringBuilder& inout_sText)
 {
   inout_sText.Format("Set Blackboard Entry '{}' to '{}'", m_sEntryName.GetHash(), m_Value);
 }
 
-ezAiCommandResult ezAiCommandSetBlackboardEntry::Execute(ezGameObject* pOwner, ezTime tDiff)
+ezAiCmdResult ezAiCmdBlackboardSetEntry::Execute(ezGameObject* pOwner, ezTime tDiff)
 {
   if (m_sEntryName.IsEmpty())
-    return ezAiCommandResult::Finished; // or canceled
+    return ezAiCmdResult::Finished; // or canceled
 
   auto pBlackboard = ezBlackboardComponent::FindBlackboard(pOwner);
 
   if (pBlackboard == nullptr)
   {
-    return ezAiCommandResult::Failed;
+    return ezAiCmdResult::Failed;
   }
 
   if (pBlackboard->SetEntryValue(m_sEntryName, m_Value).Failed())
-    return ezAiCommandResult::Failed;
+    return ezAiCmdResult::Failed;
 
-  return ezAiCommandResult::Finished;
+  return ezAiCmdResult::Finished;
 }
 
-void ezAiCommandSetBlackboardEntry::Cancel(ezGameObject* pOwner)
+void ezAiCmdBlackboardSetEntry::Cancel(ezGameObject* pOwner)
 {
   Reset();
 }
@@ -312,45 +313,114 @@ void ezAiCommandSetBlackboardEntry::Cancel(ezGameObject* pOwner)
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-EZ_IMPLEMENT_AICMD(ezAiCommandWaitForBlackboardEntry);
+EZ_IMPLEMENT_AICMD(ezAiCmdBlackboardWait);
 
-ezAiCommandWaitForBlackboardEntry::ezAiCommandWaitForBlackboardEntry() = default;
-ezAiCommandWaitForBlackboardEntry::~ezAiCommandWaitForBlackboardEntry() = default;
+ezAiCmdBlackboardWait::ezAiCmdBlackboardWait() = default;
+ezAiCmdBlackboardWait::~ezAiCmdBlackboardWait() = default;
 
-void ezAiCommandWaitForBlackboardEntry::Reset()
+void ezAiCmdBlackboardWait::Reset()
 {
   m_sEntryName.Clear();
   m_Value = {};
   m_bEquals = true;
 }
 
-void ezAiCommandWaitForBlackboardEntry::GetDebugDesc(ezStringBuilder& inout_sText)
+void ezAiCmdBlackboardWait::GetDebugDesc(ezStringBuilder& inout_sText)
 {
   inout_sText.Format("Wait for Blackboard Entry '{}' {} '{}'", m_sEntryName.GetHash(), m_bEquals ? "==" : "!=", m_Value);
 }
 
-ezAiCommandResult ezAiCommandWaitForBlackboardEntry::Execute(ezGameObject* pOwner, ezTime tDiff)
+ezAiCmdResult ezAiCmdBlackboardWait::Execute(ezGameObject* pOwner, ezTime tDiff)
 {
   if (m_sEntryName.IsEmpty())
-    return ezAiCommandResult::Finished; // or canceled
+    return ezAiCmdResult::Finished; // or canceled
 
   auto pBlackboard = ezBlackboardComponent::FindBlackboard(pOwner);
 
   if (pBlackboard == nullptr)
   {
-    return ezAiCommandResult::Failed;
+    return ezAiCmdResult::Failed;
   }
 
   const ezVariant val = pBlackboard->GetEntryValue(m_sEntryName, m_Value);
   const bool bIsEqual = (val == m_Value);
 
   if (m_bEquals == bIsEqual)
-    return ezAiCommandResult::Finished;
+    return ezAiCmdResult::Finished;
 
-  return ezAiCommandResult::Succeded;
+  return ezAiCmdResult::Succeded;
 }
 
-void ezAiCommandWaitForBlackboardEntry::Cancel(ezGameObject* pOwner)
+void ezAiCmdBlackboardWait::Cancel(ezGameObject* pOwner)
 {
   Reset();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+EZ_IMPLEMENT_AICMD(ezAiCmdCCMoveTo);
+
+ezAiCmdCCMoveTo::ezAiCmdCCMoveTo() = default;
+ezAiCmdCCMoveTo::~ezAiCmdCCMoveTo() = default;
+
+void ezAiCmdCCMoveTo::Reset()
+{
+  m_vTargetPosition = ezVec3::ZeroVector();
+  m_hTargetObject.Invalidate();
+  m_fSpeed = 0.0f;
+  m_fReachedDistSQR = 1.0f;
+}
+
+void ezAiCmdCCMoveTo::GetDebugDesc(ezStringBuilder& inout_sText)
+{
+  inout_sText.Format("CCMoveTo: {}/{}/{} - @{}/sec", m_vTargetPosition.x, m_vTargetPosition.y, m_vTargetPosition.z, m_fSpeed);
+}
+
+ezAiCmdResult ezAiCmdCCMoveTo::Execute(ezGameObject* pOwner, ezTime tDiff)
+{
+  if (m_fSpeed <= 0.0f)
+    return ezAiCmdResult::Finished; // or canceled
+
+  if (!m_hTargetObject.IsInvalidated())
+  {
+    ezGameObject* pTarget;
+    if (!pOwner->GetWorld()->TryGetObject(m_hTargetObject, pTarget))
+    {
+      return ezAiCmdResult::Failed;
+    }
+
+    m_vTargetPosition = pTarget->GetGlobalPosition();
+  }
+
+  const ezVec3 vOwnPos = pOwner->GetGlobalPosition();
+  ezVec3 vDir = m_vTargetPosition - vOwnPos;
+
+
+  if (vDir.GetLengthSquared() <= m_fReachedDistSQR)
+    return ezAiCmdResult::Finished;
+
+  vDir.z = 0.0f;
+
+  ezQuat qRot;
+  qRot.SetShortestRotation(ezVec3::UnitXAxis(), vDir.GetNormalized());
+  pOwner->SetGlobalRotation(qRot);
+
+  // const ezVec3 vLocalDir = -pOwner->GetGlobalTransform().m_qRotation * vDir;
+
+  ezMsgMoveCharacterController msg;
+  msg.m_fMoveForwards = m_fSpeed;
+  // msg.m_fMoveForwards = ezMath::Clamp(vLocalDir.x, 0.0f, 1.0f);
+  // msg.m_fMoveBackwards = ezMath::Clamp(-vLocalDir.x, 0.0f, 1.0f);
+  // msg.m_fStrafeLeft = ezMath::Clamp(-vLocalDir.y, 0.0f, 1.0f);
+  // msg.m_fStrafeRight = ezMath::Clamp(vLocalDir.y, 0.0f, 1.0f);
+  pOwner->SendMessage(msg);
+
+  return ezAiCmdResult::Succeded;
+}
+
+void ezAiCmdCCMoveTo::Cancel(ezGameObject* pOwner)
+{
+  m_fSpeed = 0.0f;
 }

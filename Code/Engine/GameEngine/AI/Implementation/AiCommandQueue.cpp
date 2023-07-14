@@ -4,10 +4,14 @@
 #include <GameEngine/AI/AiCommandQueue.h>
 #include <RendererCore/Debug/DebugRenderer.h>
 
-ezAiCommandQueue::ezAiCommandQueue() = default;
-ezAiCommandQueue::~ezAiCommandQueue() = default;
+ezAiCmdQueue::ezAiCmdQueue() = default;
 
-void ezAiCommandQueue::Cancel(ezGameObject* pOwner)
+ezAiCmdQueue::~ezAiCmdQueue()
+{
+  ClearQueue();
+}
+
+void ezAiCmdQueue::Cancel(ezGameObject* pOwner)
 {
   for (ezUInt32 i = 0; i < m_Queue.GetCount(); ++i)
   {
@@ -15,7 +19,7 @@ void ezAiCommandQueue::Cancel(ezGameObject* pOwner)
   }
 }
 
-void ezAiCommandQueue::ClearQueue()
+void ezAiCmdQueue::ClearQueue()
 {
   for (auto pCmd : m_Queue)
   {
@@ -25,30 +29,30 @@ void ezAiCommandQueue::ClearQueue()
   m_Queue.Clear();
 }
 
-bool ezAiCommandQueue::IsEmpty() const
+bool ezAiCmdQueue::IsEmpty() const
 {
   return m_Queue.IsEmpty();
 }
 
-void ezAiCommandQueue::AddCommand(ezAiCommand* pCommand)
+void ezAiCmdQueue::AddCommand(ezAiCmd* pCommand)
 {
   m_Queue.PushBack(pCommand);
 }
 
-void ezAiCommandQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
+void ezAiCmdQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
 {
   EZ_LOG_BLOCK("AiCommandExecution");
   EZ_PROFILE_SCOPE("AiCommandExecution");
 
   while (!m_Queue.IsEmpty())
   {
-    ezAiCommand* pCmd = m_Queue[0];
+    ezAiCmd* pCmd = m_Queue[0];
 
-    const ezAiCommandResult res = pCmd->Execute(pOwner, tDiff);
-    if (res == ezAiCommandResult::Succeded)
+    const ezAiCmdResult res = pCmd->Execute(pOwner, tDiff);
+    if (res == ezAiCmdResult::Succeded)
       return;
 
-    if (res == ezAiCommandResult::Failed)
+    if (res == ezAiCmdResult::Failed)
     {
       ezStringBuilder str;
       pCmd->GetDebugDesc(str);
@@ -62,7 +66,7 @@ void ezAiCommandQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
   }
 }
 
-void ezAiCommandQueue::PrintDebugInfo(ezGameObject* pOwner)
+void ezAiCmdQueue::PrintDebugInfo(ezGameObject* pOwner)
 {
   ezStringBuilder str;
 

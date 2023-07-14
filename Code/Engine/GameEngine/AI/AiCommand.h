@@ -5,7 +5,7 @@
 
 class ezGameObject;
 
-enum class [[nodiscard]] ezAiCommandResult
+enum class [[nodiscard]] ezAiCmdResult
 {
   Succeded, ///< Finished for this frame, but needs to be executed again.
   Finished, ///< Completely finished (or canceled), does not need to be executed again.
@@ -70,19 +70,19 @@ private:                                    \
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-class EZ_GAMEENGINE_DLL ezAiCommand
+class EZ_GAMEENGINE_DLL ezAiCmd
 {
 public:
-  ezAiCommand();
-  virtual ~ezAiCommand();
+  ezAiCmd();
+  virtual ~ezAiCmd();
 
   virtual void Reset() = 0;
   virtual void GetDebugDesc(ezStringBuilder& inout_sText) = 0;
-  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) = 0;
+  virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) = 0;
   virtual void Cancel(ezGameObject* pOwner) = 0;
 
 private:
-  friend class ezAiCommandQueue;
+  friend class ezAiCmdQueue;
   virtual void Destroy() = 0;
 };
 
@@ -90,17 +90,17 @@ private:
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-class EZ_GAMEENGINE_DLL ezAiCommandWait : public ezAiCommand
+class EZ_GAMEENGINE_DLL ezAiCmdWait : public ezAiCmd
 {
-  EZ_DECLARE_AICMD(ezAiCommandWait);
+  EZ_DECLARE_AICMD(ezAiCmdWait);
 
 public:
-  ezAiCommandWait();
-  ~ezAiCommandWait();
+  ezAiCmdWait();
+  ~ezAiCmdWait();
 
   virtual void Reset() override;
   virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
-  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
   virtual void Cancel(ezGameObject* pOwner) override;
 
   ezTime m_Duration;
@@ -110,17 +110,17 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-class EZ_GAMEENGINE_DLL ezAiCommandTurn : public ezAiCommand
+class EZ_GAMEENGINE_DLL ezAiCmdLerpRotation : public ezAiCmd
 {
-  EZ_DECLARE_AICMD(ezAiCommandTurn);
+  EZ_DECLARE_AICMD(ezAiCmdLerpRotation);
 
 public:
-  ezAiCommandTurn();
-  ~ezAiCommandTurn();
+  ezAiCmdLerpRotation();
+  ~ezAiCmdLerpRotation();
 
   virtual void Reset() override;
   virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
-  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
   virtual void Cancel(ezGameObject* pOwner) override;
 
   ezVec3 m_vTurnAxis = ezVec3::UnitZAxis();
@@ -132,17 +132,17 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-class EZ_GAMEENGINE_DLL ezAiCommandSlide : public ezAiCommand
+class EZ_GAMEENGINE_DLL ezAiCmdLerpPosition : public ezAiCmd
 {
-  EZ_DECLARE_AICMD(ezAiCommandSlide);
+  EZ_DECLARE_AICMD(ezAiCmdLerpPosition);
 
 public:
-  ezAiCommandSlide();
-  ~ezAiCommandSlide();
+  ezAiCmdLerpPosition();
+  ~ezAiCmdLerpPosition();
 
   virtual void Reset() override;
   virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
-  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
   virtual void Cancel(ezGameObject* pOwner) override;
 
   float m_fSpeed = 0.0f;
@@ -153,17 +153,17 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-class EZ_GAMEENGINE_DLL ezAiCommandTurnTowards : public ezAiCommand
+class EZ_GAMEENGINE_DLL ezAiCmdLerpRotationTowards : public ezAiCmd
 {
-  EZ_DECLARE_AICMD(ezAiCommandTurnTowards);
+  EZ_DECLARE_AICMD(ezAiCmdLerpRotationTowards);
 
 public:
-  ezAiCommandTurnTowards();
-  ~ezAiCommandTurnTowards();
+  ezAiCmdLerpRotationTowards();
+  ~ezAiCmdLerpRotationTowards();
 
   virtual void Reset() override;
   virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
-  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
   virtual void Cancel(ezGameObject* pOwner) override;
 
   ezVec3 m_vTargetPosition = ezVec3::ZeroVector();
@@ -176,38 +176,38 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-class EZ_GAMEENGINE_DLL ezAiCommandFollowPath : public ezAiCommand
+// class EZ_GAMEENGINE_DLL ezAiCmdFollowPath : public ezAiCmd
+//{
+//   EZ_DECLARE_AICMD(ezAiCmdFollowPath);
+//
+// public:
+//   ezAiCmdFollowPath();
+//   ~ezAiCmdFollowPath();
+//
+//   virtual void Reset() override;
+//   virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
+//   virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+//   virtual void Cancel(ezGameObject* pOwner) override;
+//
+//   ezGameObjectHandle m_hPath;
+//   float m_fSpeed = 0.0f;
+// };
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+class EZ_GAMEENGINE_DLL ezAiCmdBlackboardSetEntry : public ezAiCmd
 {
-  EZ_DECLARE_AICMD(ezAiCommandFollowPath);
+  EZ_DECLARE_AICMD(ezAiCmdBlackboardSetEntry);
 
 public:
-  ezAiCommandFollowPath();
-  ~ezAiCommandFollowPath();
+  ezAiCmdBlackboardSetEntry();
+  ~ezAiCmdBlackboardSetEntry();
 
   virtual void Reset() override;
   virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
-  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
-  virtual void Cancel(ezGameObject* pOwner) override;
-
-  ezGameObjectHandle m_hPath;
-  float m_fSpeed = 0.0f;
-};
-
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-
-class EZ_GAMEENGINE_DLL ezAiCommandSetBlackboardEntry : public ezAiCommand
-{
-  EZ_DECLARE_AICMD(ezAiCommandSetBlackboardEntry);
-
-public:
-  ezAiCommandSetBlackboardEntry();
-  ~ezAiCommandSetBlackboardEntry();
-
-  virtual void Reset() override;
-  virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
-  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
   virtual void Cancel(ezGameObject* pOwner) override;
 
   ezTempHashedString m_sEntryName;
@@ -218,20 +218,43 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-class EZ_GAMEENGINE_DLL ezAiCommandWaitForBlackboardEntry : public ezAiCommand
+class EZ_GAMEENGINE_DLL ezAiCmdBlackboardWait : public ezAiCmd
 {
-  EZ_DECLARE_AICMD(ezAiCommandWaitForBlackboardEntry);
+  EZ_DECLARE_AICMD(ezAiCmdBlackboardWait);
 
 public:
-  ezAiCommandWaitForBlackboardEntry();
-  ~ezAiCommandWaitForBlackboardEntry();
+  ezAiCmdBlackboardWait();
+  ~ezAiCmdBlackboardWait();
 
   virtual void Reset() override;
   virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
-  virtual ezAiCommandResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
   virtual void Cancel(ezGameObject* pOwner) override;
 
   ezTempHashedString m_sEntryName;
   ezVariant m_Value;
   bool m_bEquals = true;
+};
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+class EZ_GAMEENGINE_DLL ezAiCmdCCMoveTo : public ezAiCmd
+{
+  EZ_DECLARE_AICMD(ezAiCmdCCMoveTo);
+
+public:
+  ezAiCmdCCMoveTo();
+  ~ezAiCmdCCMoveTo();
+
+  virtual void Reset() override;
+  virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
+  virtual ezAiCmdResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual void Cancel(ezGameObject* pOwner) override;
+
+  ezVec3 m_vTargetPosition = ezVec3::ZeroVector();
+  ezGameObjectHandle m_hTargetObject;
+  float m_fSpeed = 0.0f;
+  float m_fReachedDistSQR = 1.0f;
 };

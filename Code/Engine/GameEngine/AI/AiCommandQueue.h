@@ -2,24 +2,25 @@
 
 #include <GameEngine/AI/AiCommand.h>
 
-class EZ_GAMEENGINE_DLL ezAiCommandQueue
+class EZ_GAMEENGINE_DLL ezAiCmdQueue
 {
 public:
-  ezAiCommandQueue();
-  ~ezAiCommandQueue();
+  ezAiCmdQueue();
+  ~ezAiCmdQueue();
 
   void Cancel(ezGameObject* pOwner);
 
   bool IsEmpty() const;
 
-  void AddCommand(ezAiCommand* pCommand);
+  void AddCommand(ezAiCmd* pCommand);
 
   void Execute(ezGameObject* pOwner, ezTime tDiff);
 
   void PrintDebugInfo(ezGameObject* pOwner);
 
-private:
   void ClearQueue();
 
-  ezHybridArray<ezAiCommand*, 16> m_Queue;
+private:
+
+  ezHybridArray<ezAiCmd*, 16> m_Queue;
 };

@@ -18,6 +18,7 @@ public:
 
 protected:
   virtual void OnSimulationStarted() override;
+  virtual void OnDeactivated() override;
 
   //////////////////////////////////////////////////////////////////////////
   // ezAiComponent
@@ -31,5 +32,5 @@ public:
   bool m_bDebugInfo = false;
 
 protected:
-  ezAiCommandQueue m_CommandQueue;
+  ezAiCmdQueue m_CommandQueue;
 };

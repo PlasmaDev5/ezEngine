@@ -11,7 +11,7 @@ o
 		s %AssetType{"Layer"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{3872236734607355539,5264883800516172798}}
-		u4 %Hash{940582036971575696}
+		u4 %Hash{3383340898141751339}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps
@@ -236,7 +236,7 @@ o
 	{
 		b %Active{1}
 		ColorGamma %BottomColor{u1{89,89,108,255}}
-		f %Intensity{0x0000803F}
+		f %Intensity{0x00008040}
 		ColorGamma %TopColor{u1{124,124,149,255}}
 	}
 }

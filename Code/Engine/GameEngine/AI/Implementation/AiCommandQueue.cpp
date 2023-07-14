@@ -19,7 +19,7 @@ void ezAiCommandQueue::ClearQueue()
 {
   for (auto pCmd : m_Queue)
   {
-    pCmd->Reset();
+    pCmd->Destroy();
   }
 
   m_Queue.Clear();
@@ -58,7 +58,7 @@ void ezAiCommandQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
       return;
     }
 
-    pCmd->Reset();
+    pCmd->Destroy();
     m_Queue.RemoveAtAndCopy(0);
   }
 }

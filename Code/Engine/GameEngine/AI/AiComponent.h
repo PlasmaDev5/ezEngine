@@ -32,9 +32,4 @@ public:
 
 protected:
   ezAiCommandQueue m_CommandQueue;
-
-  ezAiCommandWait m_CmdWait;
-  ezAiCommandTurn m_CmdTurn;
-  ezAiCommandTurnTowards m_CmdTurnTowards;
-  ezAiCommandSlide m_CmdSlide;
 };

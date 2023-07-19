@@ -14,7 +14,7 @@ public:
 
   void AddBehavior(ezUniquePtr<ezAiBehavior>&& pBehavior);
 
-  ezAiScoredGoal SelectGoal(const ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup);
+  ezAiScoredGoal SelectGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup);
 
 private:
   ezHybridArray<ezUniquePtr<ezAiBehavior>, 12> m_Behaviors;

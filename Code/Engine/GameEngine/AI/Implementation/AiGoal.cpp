@@ -7,3 +7,6 @@ ezAiGoal::~ezAiGoal() = default;
 
 ezAiGoalPOI::ezAiGoalPOI() = default;
 ezAiGoalPOI::~ezAiGoalPOI() = default;
+
+ezAiGoalWander::ezAiGoalWander() = default;
+ezAiGoalWander::~ezAiGoalWander() = default;

@@ -19,3 +19,13 @@ public:
 
   ezVec3 m_vGlobalPosition = ezVec3::ZeroVector();
 };
+
+
+class EZ_GAMEENGINE_DLL ezAiGoalWander : public ezAiGoal
+{
+public:
+  ezAiGoalWander();
+  ~ezAiGoalWander();
+
+  ezVec3 m_vGlobalPosition = ezVec3::ZeroVector();
+};

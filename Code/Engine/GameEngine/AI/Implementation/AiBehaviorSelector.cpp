@@ -10,7 +10,7 @@ void ezAiBehaviorSelector::AddBehavior(ezUniquePtr<ezAiBehavior>&& pBehavior)
   m_Behaviors.PushBack(std::move(pBehavior));
 }
 
-ezAiScoredGoal ezAiBehaviorSelector::SelectGoal(const ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup)
+ezAiScoredGoal ezAiBehaviorSelector::SelectGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup)
 {
   ezAiScoredGoal res;
 

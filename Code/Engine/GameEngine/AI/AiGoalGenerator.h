@@ -58,3 +58,22 @@ public:
 private:
   ezDynamicArray<ezAiGoalPOI> m_Goals;
 };
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+class EZ_GAMEENGINE_DLL ezAiGoalGenWander : public ezAiGoalGenerator
+{
+public:
+  ezAiGoalGenWander();
+  ~ezAiGoalGenWander();
+
+  virtual ezStringView GetGoalType() override { return "ezAiGoalWander"_ezsv; }
+  virtual void UpdateGoals(ezGameObject* pOwner) override;
+  virtual bool HasGoals() const override;
+  virtual void GetGoals(ezDynamicArray<const ezAiGoal*>& out_Goals) const override;
+
+private:
+  ezDynamicArray<ezAiGoalWander> m_Goals;
+};

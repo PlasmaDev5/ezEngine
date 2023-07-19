@@ -11,7 +11,7 @@ o
 		s %AssetType{"Prefab"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{1226021954663382923,5486056908057126826}}
-		u4 %Hash{9378070268154424480}
+		u4 %Hash{3486463445186602213}
 		VarArray %MetaInfo
 		{
 			Uuid{u4{13029994638054363945,18073931765691457807}}
@@ -189,7 +189,7 @@ o
 		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
 		f %LocalUniformScaling{0x0000803F}
 		s %Mode{"ezObjectMode::Automatic"}
-		s %Name{"Sensor"}
+		s %Name{"Sensor_POI"}
 		VarArray %Tags
 		{
 			s{"CastShadow"}

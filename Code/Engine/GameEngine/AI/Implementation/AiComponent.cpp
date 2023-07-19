@@ -152,8 +152,10 @@ void ezAiComponent::Update()
   {
     m_LastAiUpdate = GetWorld()->GetClock().GetAccumulatedTime();
 
-    DoSensorCheck();
-    //FillCmdQueue();
+    // DoSensorCheck();
+    // FillCmdQueue();
+
+    m_GoalGenPOI.Evaluate(GetOwner());
   }
 
   m_ActionQueue.Execute(GetOwner(), GetWorld()->GetClock().GetTimeDiff());

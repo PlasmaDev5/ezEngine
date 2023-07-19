@@ -2,6 +2,7 @@
 
 #include <Core/World/World.h>
 #include <GameEngine/AI/AiActionQueue.h>
+#include <GameEngine/AI/AiGoalGenerator.h>
 
 using ezAiComponentManager = ezComponentManagerSimple<class ezAiComponent, ezComponentUpdateType::WhenSimulating>;
 
@@ -37,4 +38,6 @@ protected:
 
   ezAiActionQueue m_ActionQueue;
   ezTime m_LastAiUpdate;
+
+  ezAiGoalGenPOI m_GoalGenPOI;
 };

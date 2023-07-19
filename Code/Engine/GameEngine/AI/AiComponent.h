@@ -4,7 +4,7 @@
 #include <GameEngine/AI/AiActionQueue.h>
 #include <GameEngine/AI/AiGoalGenerator.h>
 
-using ezAiComponentManager = ezComponentManagerSimple<class ezAiComponent, ezComponentUpdateType::WhenSimulating>;
+using ezAiComponentManager = ezComponentManagerSimple<class ezAiComponent, ezComponentUpdateType::WhenSimulating, ezBlockStorageType::FreeList>;
 
 class EZ_GAMEENGINE_DLL ezAiComponent : public ezComponent
 {
@@ -33,11 +33,10 @@ public:
   bool m_bDebugInfo = false;
 
 protected:
-  void DoSensorCheck();
-  void FillCmdQueue();
-
   ezAiActionQueue m_ActionQueue;
   ezTime m_LastAiUpdate;
 
-  ezAiGoalGenPOI m_GoalGenPOI;
+  ezAiGoalGeneratorGroup m_Goals;
+  ezAiBehaviorSelector m_Behaviors;
+  float m_fCurrentBehaviorScore = 0.0f;
 };

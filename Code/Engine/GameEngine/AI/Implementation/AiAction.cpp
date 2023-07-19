@@ -201,6 +201,9 @@ ezAiActionResult ezAiActionLerpRotationTowards::Execute(ezGameObject* pOwner, ez
     return ezAiActionResult::Failed;
   }
 
+  if (vCurDir.IsEqual(vTargetDir, 0.001f))
+    return ezAiActionResult::Finished;
+
   const ezAngle turnAngle = vCurDir.GetAngleBetween(vTargetDir);
 
   const ezVec3 vTurnAxis = vCurDir.CrossRH(vTargetDir).GetNormalized();
@@ -396,6 +399,7 @@ ezAiActionResult ezAiActionCCMoveTo::Execute(ezGameObject* pOwner, ezTime tDiff)
 
   const ezVec3 vOwnPos = pOwner->GetGlobalPosition();
   ezVec3 vDir = m_vTargetPosition - vOwnPos;
+  vDir.z = 0.0f; // TODO: not the best idea
 
 
   if (vDir.GetLengthSquared() <= m_fReachedDistSQR)

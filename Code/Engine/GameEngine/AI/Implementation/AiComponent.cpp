@@ -30,93 +30,6 @@ EZ_END_ABSTRACT_COMPONENT_TYPE
 ezAiComponent::ezAiComponent() = default;
 ezAiComponent::~ezAiComponent() = default;
 
-
-void ezAiComponent::DoSensorCheck()
-{
-  ezGameObject* pSensors = GetOwner()->FindChildByName("Sensor");
-
-  if (pSensors == nullptr)
-    return;
-
-  ezDynamicArray<ezSensorComponent*> sensors;
-  pSensors->TryGetComponentsOfBaseType(sensors);
-
-  if (sensors.IsEmpty())
-    return;
-
-  ezPhysicsWorldModuleInterface* pPhysicsWorldModule = GetWorld()->GetModule<ezPhysicsWorldModuleInterface>();
-
-  ezHybridArray<ezGameObject*, 32> objectsInSensorVolume;
-  ezHybridArray<ezGameObjectHandle, 32> detectedObjects;
-
-  for (auto pSensor : sensors)
-  {
-    if (pSensor->RunSensorCheck(pPhysicsWorldModule, objectsInSensorVolume, detectedObjects, false))
-    {
-      ezLog::Info("In sensor: {}", pSensor->GetLastDetectedObjects().GetCount());
-    }
-  }
-}
-
-void ezAiComponent::FillCmdQueue()
-{
-  if (!m_ActionQueue.IsEmpty())
-    return;
-
-  ezRandom& rng = GetWorld()->GetRandomNumberGenerator();
-
-  {
-    auto* pCmd = ezAiActionWait::Create();
-    pCmd->m_Duration = ezTime::Seconds(rng.DoubleMinMax(0.5, 1.0));
-    m_ActionQueue.AddAction(pCmd);
-  }
-
-  {
-    ezGameObject* pPlayer;
-    if (GetWorld()->TryGetObjectWithGlobalKey("Player", pPlayer))
-    {
-      {
-        auto* pCmd = ezAiActionLerpRotationTowards::Create();
-        pCmd->m_hTargetObject = pPlayer->GetHandle();
-        pCmd->m_TurnAnglesPerSec = ezAngle::Degree(90);
-        m_ActionQueue.AddAction(pCmd);
-      }
-      {
-        auto* pCmd = ezAiActionBlackboardSetEntry::Create();
-        pCmd->m_sEntryName = ezTempHashedString("MoveForwards");
-        pCmd->m_Value = 1;
-        m_ActionQueue.AddAction(pCmd);
-      }
-      {
-        auto* pCmd = ezAiActionCCMoveTo::Create();
-        pCmd->m_hTargetObject = pPlayer->GetHandle();
-        pCmd->m_fSpeed = 1.0f;
-        m_ActionQueue.AddAction(pCmd);
-      }
-      {
-        auto* pCmd = ezAiActionBlackboardSetEntry::Create();
-        pCmd->m_sEntryName = ezTempHashedString("MoveForwards");
-        pCmd->m_Value = 0;
-        m_ActionQueue.AddAction(pCmd);
-      }
-    }
-  }
-
-  {
-    auto* pCmd = ezAiActionBlackboardSetEntry::Create();
-    pCmd->m_sEntryName = ezTempHashedString("Wave");
-    pCmd->m_Value = 1;
-    m_ActionQueue.AddAction(pCmd);
-  }
-
-  {
-    auto* pCmd = ezAiActionBlackboardWait::Create();
-    pCmd->m_sEntryName = ezTempHashedString("Wave");
-    pCmd->m_Value = 0;
-    m_ActionQueue.AddAction(pCmd);
-  }
-}
-
 void ezAiComponent::SerializeComponent(ezWorldWriter& inout_stream) const
 {
   SUPER::SerializeComponent(inout_stream);
@@ -137,6 +50,9 @@ void ezAiComponent::DeserializeComponent(ezWorldReader& inout_stream)
 void ezAiComponent::OnSimulationStarted()
 {
   SUPER::OnSimulationStarted();
+
+  m_Goals.AddGenerator(EZ_DEFAULT_NEW(ezAiGoalGenPOI));
+  m_Behaviors.AddBehavior(EZ_DEFAULT_NEW(ezAiBehaviorGoToPOI));
 }
 
 void ezAiComponent::OnDeactivated()
@@ -148,14 +64,23 @@ void ezAiComponent::OnDeactivated()
 
 void ezAiComponent::Update()
 {
-  if (GetWorld()->GetClock().GetAccumulatedTime() > m_LastAiUpdate + ezTime::Seconds(1))
+  if (m_ActionQueue.IsEmpty())
+  {
+    m_fCurrentBehaviorScore = 0.0f;
+  }
+
+  if (GetWorld()->GetClock().GetAccumulatedTime() > m_LastAiUpdate + ezTime::Seconds(0.5))
   {
     m_LastAiUpdate = GetWorld()->GetClock().GetAccumulatedTime();
 
-    // DoSensorCheck();
-    // FillCmdQueue();
+    m_Goals.UpdateGoals(GetOwner());
+    const ezAiScoredGoal goal = m_Behaviors.SelectGoal(*GetOwner(), m_Goals);
 
-    m_GoalGenPOI.Evaluate(GetOwner());
+    if (goal.m_fScore > m_fCurrentBehaviorScore)
+    {
+      m_fCurrentBehaviorScore = goal.m_fScore;
+      goal.m_pBehavior->SetUpActions(*GetOwner(), goal.m_pGoal, m_ActionQueue);
+    }
   }
 
   m_ActionQueue.Execute(GetOwner(), GetWorld()->GetClock().GetTimeDiff());

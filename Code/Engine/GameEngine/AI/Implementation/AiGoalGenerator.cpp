@@ -6,10 +6,14 @@
 ezAiGoalGenerator::ezAiGoalGenerator() = default;
 ezAiGoalGenerator::~ezAiGoalGenerator() = default;
 
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
 ezAiGoalGenPOI::ezAiGoalGenPOI() = default;
 ezAiGoalGenPOI::~ezAiGoalGenPOI() = default;
 
-void ezAiGoalGenPOI::Evaluate(ezGameObject* pOwner)
+void ezAiGoalGenPOI::UpdateGoals(ezGameObject* pOwner)
 {
   m_Goals.Clear();
 
@@ -45,6 +49,65 @@ void ezAiGoalGenPOI::Evaluate(ezGameObject* pOwner)
 
         ezLog::Info("POI Goal At: {}/{}/{}", g.m_vGlobalPosition.x, g.m_vGlobalPosition.y, g.m_vGlobalPosition.z);
       }
+    }
+  }
+}
+
+bool ezAiGoalGenPOI::HasGoals() const
+{
+  return !m_Goals.IsEmpty();
+}
+
+void ezAiGoalGenPOI::GetGoals(ezDynamicArray<const ezAiGoal*>& out_Goals) const
+{
+  out_Goals.Reserve(out_Goals.GetCount() + m_Goals.GetCount());
+
+  for (const auto& goal : m_Goals)
+  {
+    out_Goals.PushBack(&goal);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+ezAiGoalGeneratorGroup::ezAiGoalGeneratorGroup() = default;
+ezAiGoalGeneratorGroup::~ezAiGoalGeneratorGroup() = default;
+
+void ezAiGoalGeneratorGroup::AddGenerator(ezUniquePtr<ezAiGoalGenerator>&& pGenerator)
+{
+  m_Generators.PushBack(std::move(pGenerator));
+}
+
+void ezAiGoalGeneratorGroup::UpdateGoals(ezGameObject* pOwner)
+{
+  for (auto& pGenerator : m_Generators)
+  {
+    pGenerator->UpdateGoals(pOwner);
+  }
+}
+
+bool ezAiGoalGeneratorGroup::HasGoalsOfType(ezStringView sGoalType) const
+{
+  for (auto& pGenerator : m_Generators)
+  {
+    if (pGenerator->GetGoalType() == sGoalType && pGenerator->HasGoals())
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void ezAiGoalGeneratorGroup::GetGoalsOfType(ezStringView sGoalType, ezDynamicArray<const ezAiGoal*>& out_Goals) const
+{
+  for (auto& pGenerator : m_Generators)
+  {
+    if (pGenerator->GetGoalType() == sGoalType)
+    {
+      pGenerator->GetGoals(out_Goals);
     }
   }
 }

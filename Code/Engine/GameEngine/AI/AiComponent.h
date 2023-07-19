@@ -32,5 +32,9 @@ public:
   bool m_bDebugInfo = false;
 
 protected:
+  void DoSensorCheck();
+  void FillCmdQueue();
+
   ezAiCmdQueue m_CommandQueue;
+  ezTime m_LastAiUpdate;
 };

@@ -11,19 +11,21 @@ o
 		s %AssetType{"Scene"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{332678910050156717,5413383538482065259}}
-		u4 %Hash{14880151697487794361}
+		u4 %Hash{17997176290281457178}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps
 		{
 			s{"{ 0652a7aa-63b1-4c22-8b7f-8ad678b40311 }"}
 			s{"{ 356ae27b-729d-48e7-9bf3-3aaefa239628 }"}
+			s{"{ 60196a67-b3fe-42c5-9949-e1b899258794 }"}
 			s{"{ 700252a3-0f42-4bdf-9a4e-acb2ea759784 }"}
 		}
 		VarArray %References
 		{
 			s{"{ 0652a7aa-63b1-4c22-8b7f-8ad678b40311 }"}
 			s{"{ 356ae27b-729d-48e7-9bf3-3aaefa239628 }"}
+			s{"{ 60196a67-b3fe-42c5-9949-e1b899258794 }"}
 			s{"{ 700252a3-0f42-4bdf-9a4e-acb2ea759784 }"}
 		}
 	}
@@ -450,6 +452,32 @@ o
 }
 o
 {
+	Uuid %id{u4{2660271805020576149,5052589586769338385}}
+	s %t{"ezGameObject"}
+	u3 %v{1}
+	p
+	{
+		b %Active{1}
+		VarArray %Children{}
+		VarArray %Components
+		{
+			Uuid{u4{14754464397395993735,5065651037523523241}}
+		}
+		s %GlobalKey{""}
+		Vec3 %LocalPosition{f{0x0000C840,0x00006441,0}}
+		Quat %LocalRotation{f{0,0,0,0x0000803F}}
+		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
+		f %LocalUniformScaling{0x0000803F}
+		s %Mode{"ezObjectMode::Automatic"}
+		s %Name{""}
+		VarArray %Tags
+		{
+			s{"CastShadow"}
+		}
+	}
+}
+o
+{
 	Uuid %id{u4{17585189139198682263,5057273401121500236}}
 	s %t{"ezPrefabReferenceComponent"}
 	u3 %v{4}
@@ -461,6 +489,18 @@ o
 			s %Material{"{ 873e3738-dc4d-40b0-93e8-236c2dd3165d }"}
 		}
 		s %Prefab{"{ 700252a3-0f42-4bdf-9a4e-acb2ea759784 }"}
+	}
+}
+o
+{
+	Uuid %id{u4{14754464397395993735,5065651037523523241}}
+	s %t{"ezPrefabReferenceComponent"}
+	u3 %v{4}
+	p
+	{
+		b %Active{1}
+		VarDict %Parameters{}
+		s %Prefab{"{ 60196a67-b3fe-42c5-9949-e1b899258794 }"}
 	}
 }
 o
@@ -687,6 +727,9 @@ o
 			Uuid{u4{5375485916666183052,4779877027341108851}}
 			Uuid{u4{7525536362358262457,4993335755287766721}}
 			Uuid{u4{16770596393691192938,10473186794127251098}}
+			Uuid{u4{2660271805020576149,5052589586769338385}}
+			Uuid{u4{2731787328140817730,10583841860789366360}}
+			Uuid{u4{12694862468976264494,10275745585072700199}}
 		}
 		Uuid %Settings{u4{6640616717976673943,5615868403042510966}}
 	}
@@ -888,6 +931,44 @@ o
 }
 o
 {
+	Uuid %id{u4{12694862468976264494,10275745585072700199}}
+	s %t{"ezGameObject"}
+	u3 %v{1}
+	p
+	{
+		b %Active{1}
+		VarArray %Children{}
+		VarArray %Components
+		{
+			Uuid{u4{6342310987642130464,10288807035826885055}}
+		}
+		s %GlobalKey{""}
+		Vec3 %LocalPosition{f{0x00004041,0x00001CC1,0}}
+		Quat %LocalRotation{f{0,0,0,0x0000803F}}
+		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
+		f %LocalUniformScaling{0x0000803F}
+		s %Mode{"ezObjectMode::Automatic"}
+		s %Name{""}
+		VarArray %Tags
+		{
+			s{"CastShadow"}
+		}
+	}
+}
+o
+{
+	Uuid %id{u4{6342310987642130464,10288807035826885055}}
+	s %t{"ezPrefabReferenceComponent"}
+	u3 %v{4}
+	p
+	{
+		b %Active{1}
+		VarDict %Parameters{}
+		s %Prefab{"{ 60196a67-b3fe-42c5-9949-e1b899258794 }"}
+	}
+}
+o
+{
 	Uuid %id{u4{15044900430429651814,10357831681300813473}}
 	s %t{"ezGameObject"}
 	u3 %v{1}
@@ -956,6 +1037,32 @@ o
 }
 o
 {
+	Uuid %id{u4{2731787328140817730,10583841860789366360}}
+	s %t{"ezGameObject"}
+	u3 %v{1}
+	p
+	{
+		b %Active{1}
+		VarArray %Children{}
+		VarArray %Components
+		{
+			Uuid{u4{14825979920516235316,10596903311543551216}}
+		}
+		s %GlobalKey{""}
+		Vec3 %LocalPosition{f{0x0000B8C0,0x0000F8C0,0}}
+		Quat %LocalRotation{f{0,0,0,0x0000803F}}
+		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
+		f %LocalUniformScaling{0x0000803F}
+		s %Mode{"ezObjectMode::Automatic"}
+		s %Name{""}
+		VarArray %Tags
+		{
+			s{"CastShadow"}
+		}
+	}
+}
+o
+{
 	Uuid %id{u4{9063193220194176324,10593264780009644456}}
 	s %t{"ezPathNodeComponent"}
 	u3 %v{1}
@@ -965,6 +1072,18 @@ o
 		Angle %Roll{f{0}}
 		s %Tangent1{"ezPathNodeTangentMode::Auto"}
 		s %Tangent2{"ezPathNodeTangentMode::Auto"}
+	}
+}
+o
+{
+	Uuid %id{u4{14825979920516235316,10596903311543551216}}
+	s %t{"ezPrefabReferenceComponent"}
+	u3 %v{4}
+	p
+	{
+		b %Active{1}
+		VarDict %Parameters{}
+		s %Prefab{"{ 60196a67-b3fe-42c5-9949-e1b899258794 }"}
 	}
 }
 o

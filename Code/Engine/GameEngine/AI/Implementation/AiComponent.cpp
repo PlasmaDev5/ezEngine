@@ -60,15 +60,15 @@ void ezAiComponent::DoSensorCheck()
 
 void ezAiComponent::FillCmdQueue()
 {
-  if (!m_CommandQueue.IsEmpty())
+  if (!m_ActionQueue.IsEmpty())
     return;
 
   ezRandom& rng = GetWorld()->GetRandomNumberGenerator();
 
   {
-    auto* pCmd = ezAiCmdWait::Create();
+    auto* pCmd = ezAiActionWait::Create();
     pCmd->m_Duration = ezTime::Seconds(rng.DoubleMinMax(0.5, 1.0));
-    m_CommandQueue.AddCommand(pCmd);
+    m_ActionQueue.AddAction(pCmd);
   }
 
   {
@@ -76,44 +76,44 @@ void ezAiComponent::FillCmdQueue()
     if (GetWorld()->TryGetObjectWithGlobalKey("Player", pPlayer))
     {
       {
-        auto* pCmd = ezAiCmdLerpRotationTowards::Create();
+        auto* pCmd = ezAiActionLerpRotationTowards::Create();
         pCmd->m_hTargetObject = pPlayer->GetHandle();
         pCmd->m_TurnAnglesPerSec = ezAngle::Degree(90);
-        m_CommandQueue.AddCommand(pCmd);
+        m_ActionQueue.AddAction(pCmd);
       }
       {
-        auto* pCmd = ezAiCmdBlackboardSetEntry::Create();
+        auto* pCmd = ezAiActionBlackboardSetEntry::Create();
         pCmd->m_sEntryName = ezTempHashedString("MoveForwards");
         pCmd->m_Value = 1;
-        m_CommandQueue.AddCommand(pCmd);
+        m_ActionQueue.AddAction(pCmd);
       }
       {
-        auto* pCmd = ezAiCmdCCMoveTo::Create();
+        auto* pCmd = ezAiActionCCMoveTo::Create();
         pCmd->m_hTargetObject = pPlayer->GetHandle();
         pCmd->m_fSpeed = 1.0f;
-        m_CommandQueue.AddCommand(pCmd);
+        m_ActionQueue.AddAction(pCmd);
       }
       {
-        auto* pCmd = ezAiCmdBlackboardSetEntry::Create();
+        auto* pCmd = ezAiActionBlackboardSetEntry::Create();
         pCmd->m_sEntryName = ezTempHashedString("MoveForwards");
         pCmd->m_Value = 0;
-        m_CommandQueue.AddCommand(pCmd);
+        m_ActionQueue.AddAction(pCmd);
       }
     }
   }
 
   {
-    auto* pCmd = ezAiCmdBlackboardSetEntry::Create();
+    auto* pCmd = ezAiActionBlackboardSetEntry::Create();
     pCmd->m_sEntryName = ezTempHashedString("Wave");
     pCmd->m_Value = 1;
-    m_CommandQueue.AddCommand(pCmd);
+    m_ActionQueue.AddAction(pCmd);
   }
 
   {
-    auto* pCmd = ezAiCmdBlackboardWait::Create();
+    auto* pCmd = ezAiActionBlackboardWait::Create();
     pCmd->m_sEntryName = ezTempHashedString("Wave");
     pCmd->m_Value = 0;
-    m_CommandQueue.AddCommand(pCmd);
+    m_ActionQueue.AddAction(pCmd);
   }
 }
 
@@ -141,7 +141,7 @@ void ezAiComponent::OnSimulationStarted()
 
 void ezAiComponent::OnDeactivated()
 {
-  m_CommandQueue.ClearQueue();
+  m_ActionQueue.ClearQueue();
 
   SUPER::OnDeactivated();
 }
@@ -153,13 +153,13 @@ void ezAiComponent::Update()
     m_LastAiUpdate = GetWorld()->GetClock().GetAccumulatedTime();
 
     DoSensorCheck();
-    FillCmdQueue();
+    //FillCmdQueue();
   }
 
-  m_CommandQueue.Execute(GetOwner(), GetWorld()->GetClock().GetTimeDiff());
+  m_ActionQueue.Execute(GetOwner(), GetWorld()->GetClock().GetTimeDiff());
 
   if (m_bDebugInfo)
   {
-    m_CommandQueue.PrintDebugInfo(GetOwner());
+    m_ActionQueue.PrintDebugInfo(GetOwner());
   }
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/World/World.h>
-#include <GameEngine/AI/AiCommandQueue.h>
+#include <GameEngine/AI/AiActionQueue.h>
 
 using ezAiComponentManager = ezComponentManagerSimple<class ezAiComponent, ezComponentUpdateType::WhenSimulating>;
 
@@ -35,6 +35,6 @@ protected:
   void DoSensorCheck();
   void FillCmdQueue();
 
-  ezAiCmdQueue m_CommandQueue;
+  ezAiActionQueue m_ActionQueue;
   ezTime m_LastAiUpdate;
 };

@@ -1,18 +1,18 @@
 #pragma once
 
-#include <GameEngine/AI/AiCommand.h>
+#include <GameEngine/AI/AiAction.h>
 
-class EZ_GAMEENGINE_DLL ezAiCmdQueue
+class EZ_GAMEENGINE_DLL ezAiActionQueue
 {
 public:
-  ezAiCmdQueue();
-  ~ezAiCmdQueue();
+  ezAiActionQueue();
+  ~ezAiActionQueue();
 
   void Cancel(ezGameObject* pOwner);
 
   bool IsEmpty() const;
 
-  void AddCommand(ezAiCmd* pCommand);
+  void AddAction(ezAiAction* pAction);
 
   void Execute(ezGameObject* pOwner, ezTime tDiff);
 
@@ -22,5 +22,5 @@ public:
 
 private:
 
-  ezHybridArray<ezAiCmd*, 16> m_Queue;
+  ezHybridArray<ezAiAction*, 16> m_Queue;
 };

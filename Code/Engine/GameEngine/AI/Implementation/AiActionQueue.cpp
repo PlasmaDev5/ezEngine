@@ -1,17 +1,17 @@
 #include <GameEngine/GameEnginePCH.h>
 
 #include <Foundation/Profiling/Profiling.h>
-#include <GameEngine/AI/AiCommandQueue.h>
+#include <GameEngine/AI/AiActionQueue.h>
 #include <RendererCore/Debug/DebugRenderer.h>
 
-ezAiCmdQueue::ezAiCmdQueue() = default;
+ezAiActionQueue::ezAiActionQueue() = default;
 
-ezAiCmdQueue::~ezAiCmdQueue()
+ezAiActionQueue::~ezAiActionQueue()
 {
   ClearQueue();
 }
 
-void ezAiCmdQueue::Cancel(ezGameObject* pOwner)
+void ezAiActionQueue::Cancel(ezGameObject* pOwner)
 {
   for (ezUInt32 i = 0; i < m_Queue.GetCount(); ++i)
   {
@@ -19,7 +19,7 @@ void ezAiCmdQueue::Cancel(ezGameObject* pOwner)
   }
 }
 
-void ezAiCmdQueue::ClearQueue()
+void ezAiActionQueue::ClearQueue()
 {
   for (auto pCmd : m_Queue)
   {
@@ -29,30 +29,30 @@ void ezAiCmdQueue::ClearQueue()
   m_Queue.Clear();
 }
 
-bool ezAiCmdQueue::IsEmpty() const
+bool ezAiActionQueue::IsEmpty() const
 {
   return m_Queue.IsEmpty();
 }
 
-void ezAiCmdQueue::AddCommand(ezAiCmd* pCommand)
+void ezAiActionQueue::AddAction(ezAiAction* pAction)
 {
-  m_Queue.PushBack(pCommand);
+  m_Queue.PushBack(pAction);
 }
 
-void ezAiCmdQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
+void ezAiActionQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
 {
-  EZ_LOG_BLOCK("AiCommandExecution");
-  EZ_PROFILE_SCOPE("AiCommandExecution");
+  EZ_LOG_BLOCK("AiActionExecution");
+  EZ_PROFILE_SCOPE("AiActionExecution");
 
   while (!m_Queue.IsEmpty())
   {
-    ezAiCmd* pCmd = m_Queue[0];
+    ezAiAction* pCmd = m_Queue[0];
 
-    const ezAiCmdResult res = pCmd->Execute(pOwner, tDiff);
-    if (res == ezAiCmdResult::Succeded)
+    const ezAiActionResult res = pCmd->Execute(pOwner, tDiff);
+    if (res == ezAiActionResult::Succeded)
       return;
 
-    if (res == ezAiCmdResult::Failed)
+    if (res == ezAiActionResult::Failed)
     {
       ezStringBuilder str;
       pCmd->GetDebugDesc(str);
@@ -66,13 +66,13 @@ void ezAiCmdQueue::Execute(ezGameObject* pOwner, ezTime tDiff)
   }
 }
 
-void ezAiCmdQueue::PrintDebugInfo(ezGameObject* pOwner)
+void ezAiActionQueue::PrintDebugInfo(ezGameObject* pOwner)
 {
   ezStringBuilder str;
 
   if (m_Queue.IsEmpty())
   {
-    str = "<AI command queue empty>";
+    str = "<AI action queue empty>";
     ezDebugRenderer::DrawInfoText(pOwner->GetWorld(), ezDebugRenderer::ScreenPlacement::BottomRight, "AI", str, ezColor::Orange);
   }
   else

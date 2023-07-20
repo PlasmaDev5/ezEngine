@@ -1,7 +1,8 @@
 #include <GameEngine/GameEnginePCH.h>
 
-#include "Core/Interfaces/PhysicsWorldModule.h"
+#include <Core/Interfaces/PhysicsWorldModule.h>
 #include <GameEngine/AI/AiPerceptionGenerator.h>
+#include <GameEngine/AI/AiSensorManager.h>
 
 ezAiPerceptionGenerator::ezAiPerceptionGenerator() = default;
 ezAiPerceptionGenerator::~ezAiPerceptionGenerator() = default;
@@ -18,11 +19,19 @@ void ezAiPerceptionManager::AddGenerator(ezUniquePtr<ezAiPerceptionGenerator>&& 
   m_Generators.PushBack(std::move(pGenerator));
 }
 
-void ezAiPerceptionManager::UpdatePerceptions(ezGameObject* pOwner)
+void ezAiPerceptionManager::FlagNeededSensors(ezAiSensorManager& ref_SensorManager)
 {
   for (auto& pGenerator : m_Generators)
   {
-    pGenerator->UpdatePerceptions(pOwner);
+    pGenerator->FlagNeededSensors(ref_SensorManager);
+  }
+}
+
+void ezAiPerceptionManager::UpdatePerceptions(ezGameObject* pOwner, const ezAiSensorManager& ref_SensorManager)
+{
+  for (auto& pGenerator : m_Generators)
+  {
+    pGenerator->UpdatePerceptions(pOwner, ref_SensorManager);
   }
 }
 
@@ -57,40 +66,26 @@ void ezAiPerceptionManager::GetPerceptionsOfType(ezStringView sPerceptionType, e
 ezAiPerceptionGenPOI::ezAiPerceptionGenPOI() = default;
 ezAiPerceptionGenPOI::~ezAiPerceptionGenPOI() = default;
 
-void ezAiPerceptionGenPOI::UpdatePerceptions(ezGameObject* pOwner)
+void ezAiPerceptionGenPOI::UpdatePerceptions(ezGameObject* pOwner, const ezAiSensorManager& ref_SensorManager)
 {
   m_Perceptions.Clear();
 
-  ezGameObject* pSensors = pOwner->FindChildByName("Sensor_POI");
-
-  if (pSensors == nullptr)
-    return;
-
-  ezDynamicArray<ezSensorComponent*> sensors;
-  pSensors->TryGetComponentsOfBaseType(sensors);
-
-  if (sensors.IsEmpty())
+  const ezAiSensorSpatial* pSensorSee = static_cast<const ezAiSensorSpatial*>(ref_SensorManager.GetSensor("Sensor_See"));
+  if (pSensorSee == nullptr)
     return;
 
   ezWorld* pWorld = pOwner->GetWorld();
 
-  ezPhysicsWorldModuleInterface* pPhysicsWorldModule = pWorld->GetModule<ezPhysicsWorldModuleInterface>();
-
-  ezHybridArray<ezGameObject*, 32> objectsInSensorVolume;
   ezHybridArray<ezGameObjectHandle, 32> detectedObjects;
+  pSensorSee->RetrieveSensations(pOwner, detectedObjects);
 
-  for (auto pSensor : sensors)
+  for (ezGameObjectHandle hObj : detectedObjects)
   {
-    pSensor->RunSensorCheck(pPhysicsWorldModule, objectsInSensorVolume, detectedObjects, false);
-
-    for (ezGameObjectHandle hObj : pSensor->GetLastDetectedObjects())
+    ezGameObject* pObj = nullptr;
+    if (pWorld->TryGetObject(hObj, pObj))
     {
-      ezGameObject* pObj = nullptr;
-      if (pWorld->TryGetObject(hObj, pObj))
-      {
-        auto& g = m_Perceptions.ExpandAndGetRef();
-        g.m_vGlobalPosition = pObj->GetGlobalPosition();
-      }
+      auto& g = m_Perceptions.ExpandAndGetRef();
+      g.m_vGlobalPosition = pObj->GetGlobalPosition();
     }
   }
 }
@@ -110,6 +105,11 @@ void ezAiPerceptionGenPOI::GetPerceptions(ezDynamicArray<const ezAiPerception*>&
   }
 }
 
+void ezAiPerceptionGenPOI::FlagNeededSensors(ezAiSensorManager& ref_SensorManager)
+{
+  ref_SensorManager.FlagAsNeeded("Sensor_See");
+}
+
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ void ezAiPerceptionGenPOI::GetPerceptions(ezDynamicArray<const ezAiPerception*>&
 ezAiPerceptionGenWander::ezAiPerceptionGenWander() = default;
 ezAiPerceptionGenWander::~ezAiPerceptionGenWander() = default;
 
-void ezAiPerceptionGenWander::UpdatePerceptions(ezGameObject* pOwner)
+void ezAiPerceptionGenWander::UpdatePerceptions(ezGameObject* pOwner, const ezAiSensorManager& ref_SensorManager)
 {
   m_Perceptions.Clear();
 
@@ -175,4 +175,9 @@ void ezAiPerceptionGenWander::GetPerceptions(ezDynamicArray<const ezAiPerception
   {
     out_Perceptions.PushBack(&perception);
   }
+}
+
+void ezAiPerceptionGenWander::FlagNeededSensors(ezAiSensorManager& ref_SensorManager)
+{
+  ref_SensorManager.FlagAsNeeded("Sensor_See");
 }

@@ -5,6 +5,7 @@
 #include <Core/WorldSerializer/WorldReader.h>
 #include <Core/WorldSerializer/WorldWriter.h>
 #include <GameEngine/AI/AiComponent.h>
+#include <GameEngine/AI/AiSensor.h>
 #include <RendererCore/Debug/DebugRenderer.h>
 
 // clang-format off
@@ -51,6 +52,7 @@ void ezAiComponent::OnSimulationStarted()
 {
   SUPER::OnSimulationStarted();
 
+  m_SensorManager.AddSensor("Sensor_See", EZ_DEFAULT_NEW(ezAiSensorSpatial, ezTempHashedString("Sensor_POI")));
   m_PerceptionManager.AddGenerator(EZ_DEFAULT_NEW(ezAiPerceptionGenPOI));
   m_PerceptionManager.AddGenerator(EZ_DEFAULT_NEW(ezAiPerceptionGenWander));
   m_Behaviors.AddBehavior(EZ_DEFAULT_NEW(ezAiBehaviorGoToPOI));
@@ -76,7 +78,11 @@ void ezAiComponent::Update()
   {
     m_LastAiUpdate = GetWorld()->GetClock().GetAccumulatedTime();
 
-    m_PerceptionManager.UpdatePerceptions(GetOwner());
+    m_PerceptionManager.FlagNeededSensors(m_SensorManager);
+
+    m_SensorManager.UpdateNeededSensors(GetOwner());
+
+    m_PerceptionManager.UpdatePerceptions(GetOwner(), m_SensorManager);
     const ezAiBehaviorScore score = m_Behaviors.SelectBehavior(*GetOwner(), m_PerceptionManager);
 
     if (score.m_fScore > m_fCurrentBehaviorScore)

@@ -3,6 +3,7 @@
 #include <Core/World/World.h>
 #include <GameEngine/AI/AiActionQueue.h>
 #include <GameEngine/AI/AiPerceptionGenerator.h>
+#include <GameEngine/AI/AiSensorManager.h>
 
 using ezAiComponentManager = ezComponentManagerSimple<class ezAiComponent, ezComponentUpdateType::WhenSimulating, ezBlockStorageType::FreeList>;
 
@@ -36,6 +37,7 @@ protected:
   ezAiActionQueue m_ActionQueue;
   ezTime m_LastAiUpdate;
 
+  ezAiSensorManager m_SensorManager;
   ezAiPerceptionManager m_PerceptionManager;
   ezAiBehaviorSelector m_Behaviors;
   float m_fCurrentBehaviorScore = 0.0f;

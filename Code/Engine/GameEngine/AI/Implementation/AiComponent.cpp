@@ -51,8 +51,8 @@ void ezAiComponent::OnSimulationStarted()
 {
   SUPER::OnSimulationStarted();
 
-  m_Goals.AddGenerator(EZ_DEFAULT_NEW(ezAiGoalGenPOI));
-  m_Goals.AddGenerator(EZ_DEFAULT_NEW(ezAiGoalGenWander));
+  m_PerceptionManager.AddGenerator(EZ_DEFAULT_NEW(ezAiPerceptionGenPOI));
+  m_PerceptionManager.AddGenerator(EZ_DEFAULT_NEW(ezAiPerceptionGenWander));
   m_Behaviors.AddBehavior(EZ_DEFAULT_NEW(ezAiBehaviorGoToPOI));
   m_Behaviors.AddBehavior(EZ_DEFAULT_NEW(ezAiBehaviorWander));
   m_Behaviors.AddBehavior(EZ_DEFAULT_NEW(ezAiBehaviorShoot));
@@ -76,13 +76,13 @@ void ezAiComponent::Update()
   {
     m_LastAiUpdate = GetWorld()->GetClock().GetAccumulatedTime();
 
-    m_Goals.UpdateGoals(GetOwner());
-    const ezAiScoredGoal goal = m_Behaviors.SelectGoal(*GetOwner(), m_Goals);
+    m_PerceptionManager.UpdatePerceptions(GetOwner());
+    const ezAiBehaviorScore score = m_Behaviors.SelectBehavior(*GetOwner(), m_PerceptionManager);
 
-    if (goal.m_fScore > m_fCurrentBehaviorScore)
+    if (score.m_fScore > m_fCurrentBehaviorScore)
     {
-      m_fCurrentBehaviorScore = goal.m_fScore;
-      goal.m_pBehavior->SetUpActions(*GetOwner(), goal.m_pGoal, m_ActionQueue);
+      m_fCurrentBehaviorScore = score.m_fScore;
+      score.m_pBehavior->SetUpActions(*GetOwner(), score.m_pPerception, m_ActionQueue);
     }
   }
 

@@ -10,13 +10,13 @@ void ezAiBehaviorSelector::AddBehavior(ezUniquePtr<ezAiBehavior>&& pBehavior)
   m_Behaviors.PushBack(std::move(pBehavior));
 }
 
-ezAiScoredGoal ezAiBehaviorSelector::SelectGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup)
+ezAiBehaviorScore ezAiBehaviorSelector::SelectBehavior(ezGameObject& owner, const ezAiPerceptionManager& perceptionManager)
 {
-  ezAiScoredGoal res;
+  ezAiBehaviorScore res;
 
   for (auto& pBehavior : m_Behaviors)
   {
-    const ezAiScoredGoal scored = pBehavior->DetermineBestGoal(owner, goalGroup);
+    const ezAiBehaviorScore scored = pBehavior->DetermineBehaviorScore(owner, perceptionManager);
 
     if (scored.m_fScore > res.m_fScore)
     {

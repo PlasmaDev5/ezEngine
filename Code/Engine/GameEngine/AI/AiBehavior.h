@@ -1,15 +1,15 @@
 #pragma once
 
-#include <GameEngine/AI/AiGoalGenerator.h>
+#include <GameEngine/AI/AiPerceptionGenerator.h>
 #include <GameEngine/GameEngineDLL.h>
 
 class ezAiBehavior;
 
-struct ezAiScoredGoal
+struct ezAiBehaviorScore
 {
   ezAiBehavior* m_pBehavior = nullptr;
+  const ezAiPerception* m_pPerception = nullptr;
   float m_fScore = 0.0f;
-  const ezAiGoal* m_pGoal = nullptr;
 };
 
 class EZ_GAMEENGINE_DLL ezAiBehavior
@@ -18,8 +18,8 @@ public:
   ezAiBehavior();
   virtual ~ezAiBehavior();
 
-  virtual ezAiScoredGoal DetermineBestGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup) = 0;
-  virtual void SetUpActions(ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) = 0;
+  virtual ezAiBehaviorScore DetermineBehaviorScore(ezGameObject& owner, const ezAiPerceptionManager& perceptionManager) = 0;
+  virtual void SetUpActions(ezGameObject& owner, const ezAiPerception* pPerception, ezAiActionQueue& inout_ActionQueue) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -32,8 +32,8 @@ public:
   ezAiBehaviorGoToPOI();
   ~ezAiBehaviorGoToPOI();
 
-  virtual ezAiScoredGoal DetermineBestGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup) override;
-  virtual void SetUpActions(ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) override;
+  virtual ezAiBehaviorScore DetermineBehaviorScore(ezGameObject& owner, const ezAiPerceptionManager& perceptionManager) override;
+  virtual void SetUpActions(ezGameObject& owner, const ezAiPerception* pPerception, ezAiActionQueue& inout_ActionQueue) override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -46,8 +46,8 @@ public:
   ezAiBehaviorWander();
   ~ezAiBehaviorWander();
 
-  virtual ezAiScoredGoal DetermineBestGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup) override;
-  virtual void SetUpActions(ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) override;
+  virtual ezAiBehaviorScore DetermineBehaviorScore(ezGameObject& owner, const ezAiPerceptionManager& perceptionManager) override;
+  virtual void SetUpActions(ezGameObject& owner, const ezAiPerception* pPerception, ezAiActionQueue& inout_ActionQueue) override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -60,6 +60,6 @@ public:
   ezAiBehaviorShoot();
   ~ezAiBehaviorShoot();
 
-  virtual ezAiScoredGoal DetermineBestGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup) override;
-  virtual void SetUpActions(ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) override;
+  virtual ezAiBehaviorScore DetermineBehaviorScore(ezGameObject& owner, const ezAiPerceptionManager& perceptionManager) override;
+  virtual void SetUpActions(ezGameObject& owner, const ezAiPerception* pPerception, ezAiActionQueue& inout_ActionQueue) override;
 };

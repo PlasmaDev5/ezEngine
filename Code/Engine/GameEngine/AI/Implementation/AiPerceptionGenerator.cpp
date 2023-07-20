@@ -1,36 +1,36 @@
 #include <GameEngine/GameEnginePCH.h>
 
 #include "Core/Interfaces/PhysicsWorldModule.h"
-#include <GameEngine/AI/AiGoalGenerator.h>
+#include <GameEngine/AI/AiPerceptionGenerator.h>
 
-ezAiGoalGenerator::ezAiGoalGenerator() = default;
-ezAiGoalGenerator::~ezAiGoalGenerator() = default;
+ezAiPerceptionGenerator::ezAiPerceptionGenerator() = default;
+ezAiPerceptionGenerator::~ezAiPerceptionGenerator() = default;
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-ezAiGoalGeneratorGroup::ezAiGoalGeneratorGroup() = default;
-ezAiGoalGeneratorGroup::~ezAiGoalGeneratorGroup() = default;
+ezAiPerceptionManager::ezAiPerceptionManager() = default;
+ezAiPerceptionManager::~ezAiPerceptionManager() = default;
 
-void ezAiGoalGeneratorGroup::AddGenerator(ezUniquePtr<ezAiGoalGenerator>&& pGenerator)
+void ezAiPerceptionManager::AddGenerator(ezUniquePtr<ezAiPerceptionGenerator>&& pGenerator)
 {
   m_Generators.PushBack(std::move(pGenerator));
 }
 
-void ezAiGoalGeneratorGroup::UpdateGoals(ezGameObject* pOwner)
+void ezAiPerceptionManager::UpdatePerceptions(ezGameObject* pOwner)
 {
   for (auto& pGenerator : m_Generators)
   {
-    pGenerator->UpdateGoals(pOwner);
+    pGenerator->UpdatePerceptions(pOwner);
   }
 }
 
-bool ezAiGoalGeneratorGroup::HasGoalsOfType(ezStringView sGoalType) const
+bool ezAiPerceptionManager::HasPerceptionsOfType(ezStringView sPerceptionType) const
 {
   for (auto& pGenerator : m_Generators)
   {
-    if (pGenerator->GetGoalType() == sGoalType && pGenerator->HasGoals())
+    if (pGenerator->GetPerceptionType() == sPerceptionType && pGenerator->HasPerceptions())
     {
       return true;
     }
@@ -39,13 +39,13 @@ bool ezAiGoalGeneratorGroup::HasGoalsOfType(ezStringView sGoalType) const
   return false;
 }
 
-void ezAiGoalGeneratorGroup::GetGoalsOfType(ezStringView sGoalType, ezDynamicArray<const ezAiGoal*>& out_Goals) const
+void ezAiPerceptionManager::GetPerceptionsOfType(ezStringView sPerceptionType, ezDynamicArray<const ezAiPerception*>& out_Perceptions) const
 {
   for (auto& pGenerator : m_Generators)
   {
-    if (pGenerator->GetGoalType() == sGoalType)
+    if (pGenerator->GetPerceptionType() == sPerceptionType)
     {
-      pGenerator->GetGoals(out_Goals);
+      pGenerator->GetPerceptions(out_Perceptions);
     }
   }
 }
@@ -54,12 +54,12 @@ void ezAiGoalGeneratorGroup::GetGoalsOfType(ezStringView sGoalType, ezDynamicArr
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-ezAiGoalGenPOI::ezAiGoalGenPOI() = default;
-ezAiGoalGenPOI::~ezAiGoalGenPOI() = default;
+ezAiPerceptionGenPOI::ezAiPerceptionGenPOI() = default;
+ezAiPerceptionGenPOI::~ezAiPerceptionGenPOI() = default;
 
-void ezAiGoalGenPOI::UpdateGoals(ezGameObject* pOwner)
+void ezAiPerceptionGenPOI::UpdatePerceptions(ezGameObject* pOwner)
 {
-  m_Goals.Clear();
+  m_Perceptions.Clear();
 
   ezGameObject* pSensors = pOwner->FindChildByName("Sensor_POI");
 
@@ -88,27 +88,25 @@ void ezAiGoalGenPOI::UpdateGoals(ezGameObject* pOwner)
       ezGameObject* pObj = nullptr;
       if (pWorld->TryGetObject(hObj, pObj))
       {
-        auto& g = m_Goals.ExpandAndGetRef();
+        auto& g = m_Perceptions.ExpandAndGetRef();
         g.m_vGlobalPosition = pObj->GetGlobalPosition();
-
-        //ezLog::Info("POI Goal At: {}/{}/{}", g.m_vGlobalPosition.x, g.m_vGlobalPosition.y, g.m_vGlobalPosition.z);
       }
     }
   }
 }
 
-bool ezAiGoalGenPOI::HasGoals() const
+bool ezAiPerceptionGenPOI::HasPerceptions() const
 {
-  return !m_Goals.IsEmpty();
+  return !m_Perceptions.IsEmpty();
 }
 
-void ezAiGoalGenPOI::GetGoals(ezDynamicArray<const ezAiGoal*>& out_Goals) const
+void ezAiPerceptionGenPOI::GetPerceptions(ezDynamicArray<const ezAiPerception*>& out_Perceptions) const
 {
-  out_Goals.Reserve(out_Goals.GetCount() + m_Goals.GetCount());
+  out_Perceptions.Reserve(out_Perceptions.GetCount() + m_Perceptions.GetCount());
 
-  for (const auto& goal : m_Goals)
+  for (const auto& perception : m_Perceptions)
   {
-    out_Goals.PushBack(&goal);
+    out_Perceptions.PushBack(&perception);
   }
 }
 
@@ -116,12 +114,12 @@ void ezAiGoalGenPOI::GetGoals(ezDynamicArray<const ezAiGoal*>& out_Goals) const
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-ezAiGoalGenWander::ezAiGoalGenWander() = default;
-ezAiGoalGenWander::~ezAiGoalGenWander() = default;
+ezAiPerceptionGenWander::ezAiPerceptionGenWander() = default;
+ezAiPerceptionGenWander::~ezAiPerceptionGenWander() = default;
 
-void ezAiGoalGenWander::UpdateGoals(ezGameObject* pOwner)
+void ezAiPerceptionGenWander::UpdatePerceptions(ezGameObject* pOwner)
 {
-  m_Goals.Clear();
+  m_Perceptions.Clear();
 
   ezWorld* pWorld = pOwner->GetWorld();
   const ezVec3 c = pOwner->GetGlobalPosition();
@@ -129,52 +127,52 @@ void ezAiGoalGenWander::UpdateGoals(ezGameObject* pOwner)
   const ezVec3 right = 5.0f * pOwner->GetGlobalDirRight();
 
   {
-    auto& g = m_Goals.ExpandAndGetRef();
+    auto& g = m_Perceptions.ExpandAndGetRef();
     g.m_vGlobalPosition = c + dir;
   }
 
   {
-    auto& g = m_Goals.ExpandAndGetRef();
+    auto& g = m_Perceptions.ExpandAndGetRef();
     g.m_vGlobalPosition = c + right;
   }
 
   {
-    auto& g = m_Goals.ExpandAndGetRef();
+    auto& g = m_Perceptions.ExpandAndGetRef();
     g.m_vGlobalPosition = c - right;
   }
 
   {
-    auto& g = m_Goals.ExpandAndGetRef();
+    auto& g = m_Perceptions.ExpandAndGetRef();
     g.m_vGlobalPosition = c + dir + right;
   }
 
   {
-    auto& g = m_Goals.ExpandAndGetRef();
+    auto& g = m_Perceptions.ExpandAndGetRef();
     g.m_vGlobalPosition = c + dir - right;
   }
 
   {
-    auto& g = m_Goals.ExpandAndGetRef();
+    auto& g = m_Perceptions.ExpandAndGetRef();
     g.m_vGlobalPosition = c - dir + right;
   }
 
   {
-    auto& g = m_Goals.ExpandAndGetRef();
+    auto& g = m_Perceptions.ExpandAndGetRef();
     g.m_vGlobalPosition = c - dir - right;
   }
 }
 
-bool ezAiGoalGenWander::HasGoals() const
+bool ezAiPerceptionGenWander::HasPerceptions() const
 {
-  return !m_Goals.IsEmpty();
+  return !m_Perceptions.IsEmpty();
 }
 
-void ezAiGoalGenWander::GetGoals(ezDynamicArray<const ezAiGoal*>& out_Goals) const
+void ezAiPerceptionGenWander::GetPerceptions(ezDynamicArray<const ezAiPerception*>& out_Perceptions) const
 {
-  out_Goals.Reserve(out_Goals.GetCount() + m_Goals.GetCount());
+  out_Perceptions.Reserve(out_Perceptions.GetCount() + m_Perceptions.GetCount());
 
-  for (const auto& goal : m_Goals)
+  for (const auto& perception : m_Perceptions)
   {
-    out_Goals.PushBack(&goal);
+    out_Perceptions.PushBack(&perception);
   }
 }

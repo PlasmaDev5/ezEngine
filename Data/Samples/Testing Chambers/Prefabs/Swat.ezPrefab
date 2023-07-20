@@ -21,7 +21,7 @@ o
 		s %AssetType{"Prefab"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{10702564381631269273,4811449682030586471}}
-		u4 %Hash{11171507879959781903}
+		u4 %Hash{12625502747617176828}
 		VarArray %MetaInfo
 		{
 			Uuid{u4{1932934232904238156,3064996168236814847}}
@@ -30,6 +30,7 @@ o
 		VarArray %PackageDeps
 		{
 			s{"{ 0ae755be-1cff-4b1f-98c8-503ada6561ce }"}
+			s{"{ 3e9e4d44-0673-43ed-ad7d-0a8970551944 }"}
 			s{"{ 95277fc8-96b9-4c58-a203-56ae33cf905d }"}
 			s{"{ 95d27ddc-19e0-4921-8f15-6db4850cbe8a }"}
 			s{"{ dac72346-bec7-4dc3-88d7-e82a79cd3fa4 }"}
@@ -148,6 +149,51 @@ o
 }
 o
 {
+	Uuid %id{u4{3344170100704015677,9952189339775349442}}
+	s %t{"ezSpawnComponent"}
+	u3 %v{3}
+	p
+	{
+		b %Active{1}
+		b %AttachAsChild{0}
+		Time %DelayRange{d{0x9A9999999999C93F}}
+		Angle %Deviation{f{0x5077563D}}
+		Time %MinDelay{d{0x333333333333D33F}}
+		VarDict %Parameters{}
+		s %Prefab{"{ 3e9e4d44-0673-43ed-ad7d-0a8970551944 }"}
+		b %SpawnAtStart{0}
+		b %SpawnContinuously{0}
+	}
+}
+o
+{
+	Uuid %id{u4{7065779763298951195,10478885560666403467}}
+	s %t{"ezGameObject"}
+	u3 %v{1}
+	p
+	{
+		b %Active{1}
+		VarArray %Children{}
+		VarArray %Components
+		{
+			Uuid{u4{3344170100704015677,9952189339775349442}}
+		}
+		s %GlobalKey{""}
+		Vec3 %LocalPosition{f{0x0000003F,0,0x0000A03F}}
+		Quat %LocalRotation{f{0,0,0,0x0000803F}}
+		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
+		f %LocalUniformScaling{0x0000803F}
+		s %Mode{"ezObjectMode::Automatic"}
+		s %Name{"Spawn"}
+		VarArray %Tags
+		{
+			s{"CastShadow"}
+			s{"AutoColMesh"}
+		}
+	}
+}
+o
+{
 	Uuid %id{u4{10856158216825465441,13288042450408231194}}
 	s %t{"ezGameObject"}
 	u3 %v{1}
@@ -157,6 +203,7 @@ o
 		VarArray %Children
 		{
 			Uuid{u4{5974981963623187093,4592863600311290786}}
+			Uuid{u4{7065779763298951195,10478885560666403467}}
 		}
 		VarArray %Components
 		{
@@ -251,7 +298,7 @@ o
 		f %OwnerVelocityScale{0x0000803F}
 		b %SelfCollision{1}
 		s %StartMode{"ezJoltRagdollStartMode::WithCurrentMeshPose"}
-		f %StiffnessFactor{0x0000803F}
+		f %StiffnessFactor{0x0000003F}
 	}
 }
 o
@@ -278,7 +325,7 @@ o
 		f %AirFriction{0x0000003F}
 		f %AirSpeed{0x00002040}
 		u1 %CollisionLayer{5}
-		f %CrouchHeight{0xCDCC4C3E}
+		f %CrouchHeight{0x9A99193F}
 		s %DebugFlags{""}
 		s %FallbackWalkSurface{""}
 		f %FootRadius{0x9A99193E}
@@ -287,12 +334,12 @@ o
 		f %Mass{0x00008C42}
 		Angle %MaxClimbingSlope{f{0xC2B8323F}}
 		f %MaxStepDown{0x0000803E}
-		f %MaxStepUp{0x0000803E}
+		f %MaxStepUp{0x9A99993E}
 		u1 %PresenceCollisionLayer{5}
 		Angle %RotateSpeed{f{0xDB0FC93F}}
 		f %RunInteractionDistance{0x00004040}
-		f %ShapeRadius{0x0000803E}
-		f %StandHeight{0x0000803F}
+		f %ShapeRadius{0x9A99993E}
+		f %StandHeight{0x9A99993F}
 		f %Strength{0x0000FA43}
 		f %WalkInteractionDistance{0x0000803F}
 		f %WalkSpeedCrouching{0x00008040}
@@ -939,6 +986,23 @@ o
 	s %t{"ezGameObjectReferenceAttribute"}
 	u3 %v{1}
 	p{}
+}
+o
+{
+	Uuid %id{u4{9274987833270370026,4800691691683468795}}
+	s %t{"ezReflectedTypeDescriptor"}
+	u3 %v{1}
+	p
+	{
+		VarArray %Attributes{}
+		s %Flags{"ezTypeFlags::Class|ezTypeFlags::Minimal"}
+		VarArray %Functions{}
+		s %ParentTypeName{"ezComponent"}
+		s %PluginName{"Static"}
+		VarArray %Properties{}
+		s %TypeName{"ezSpawnComponent"}
+		u3 %TypeVersion{3}
+	}
 }
 o
 {

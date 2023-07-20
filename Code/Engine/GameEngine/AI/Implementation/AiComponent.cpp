@@ -55,6 +55,7 @@ void ezAiComponent::OnSimulationStarted()
   m_Goals.AddGenerator(EZ_DEFAULT_NEW(ezAiGoalGenWander));
   m_Behaviors.AddBehavior(EZ_DEFAULT_NEW(ezAiBehaviorGoToPOI));
   m_Behaviors.AddBehavior(EZ_DEFAULT_NEW(ezAiBehaviorWander));
+  m_Behaviors.AddBehavior(EZ_DEFAULT_NEW(ezAiBehaviorShoot));
 }
 
 void ezAiComponent::OnDeactivated()

@@ -11,7 +11,7 @@ o
 		s %AssetType{"Layer"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{3872236734607355539,5264883800516172798}}
-		u4 %Hash{3383340898141751339}
+		u4 %Hash{7301472245742801516}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps
@@ -251,6 +251,7 @@ o
 		VarDict %Parameters
 		{
 			b %GiveAllWeapons{1}
+			b %Invincible{1}
 		}
 		s %PlayerPrefab{"{ 8044a36f-e313-4204-973d-796231798973 }"}
 	}

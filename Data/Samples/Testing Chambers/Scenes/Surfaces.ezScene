@@ -11,19 +11,17 @@ o
 		s %AssetType{"Scene"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{332678910050156717,5413383538482065259}}
-		u4 %Hash{17997176290281457178}
+		u4 %Hash{5061386681967497852}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps
 		{
-			s{"{ 0652a7aa-63b1-4c22-8b7f-8ad678b40311 }"}
 			s{"{ 356ae27b-729d-48e7-9bf3-3aaefa239628 }"}
 			s{"{ 60196a67-b3fe-42c5-9949-e1b899258794 }"}
 			s{"{ 700252a3-0f42-4bdf-9a4e-acb2ea759784 }"}
 		}
 		VarArray %References
 		{
-			s{"{ 0652a7aa-63b1-4c22-8b7f-8ad678b40311 }"}
 			s{"{ 356ae27b-729d-48e7-9bf3-3aaefa239628 }"}
 			s{"{ 60196a67-b3fe-42c5-9949-e1b899258794 }"}
 			s{"{ 700252a3-0f42-4bdf-9a4e-acb2ea759784 }"}
@@ -614,32 +612,6 @@ o
 }
 o
 {
-	Uuid %id{u4{1258056162022400943,5537141837825652596}}
-	s %t{"ezGameObject"}
-	u3 %v{1}
-	p
-	{
-		b %Active{1}
-		VarArray %Children{}
-		VarArray %Components
-		{
-			Uuid{u4{14521534950258981274,5683763463792507406}}
-		}
-		s %GlobalKey{""}
-		Vec3 %LocalPosition{f{0x00003041,0,0}}
-		Quat %LocalRotation{f{0,0,0x000080BF,0x6921A233}}
-		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
-		f %LocalUniformScaling{0x0000803F}
-		s %Mode{"ezObjectMode::Automatic"}
-		s %Name{""}
-		VarArray %Tags
-		{
-			s{"CastShadow"}
-		}
-	}
-}
-o
-{
 	Uuid %id{u4{6640616717976673943,5615868403042510966}}
 	s %t{"ezSceneDocumentSettings"}
 	u3 %v{2}
@@ -683,18 +655,6 @@ o
 }
 o
 {
-	Uuid %id{u4{14521534950258981274,5683763463792507406}}
-	s %t{"ezPrefabReferenceComponent"}
-	u3 %v{4}
-	p
-	{
-		b %Active{1}
-		VarDict %Parameters{}
-		s %Prefab{"{ 0652a7aa-63b1-4c22-8b7f-8ad678b40311 }"}
-	}
-}
-o
-{
 	Uuid %id{u4{18096612296587978288,6449934965513159559}}
 	s %t{"ezSceneDocumentRoot"}
 	u3 %v{2}
@@ -723,7 +683,6 @@ o
 			Uuid{u4{2594532845610000908,12367216233251766948}}
 			Uuid{u4{8716561783801895321,18076653464259914614}}
 			Uuid{u4{13937761163919513163,4922126407697239775}}
-			Uuid{u4{1258056162022400943,5537141837825652596}}
 			Uuid{u4{5375485916666183052,4779877027341108851}}
 			Uuid{u4{7525536362358262457,4993335755287766721}}
 			Uuid{u4{16770596393691192938,10473186794127251098}}

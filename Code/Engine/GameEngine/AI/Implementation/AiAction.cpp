@@ -4,6 +4,7 @@
 #include <Core/World/World.h>
 #include <GameEngine/AI/AiAction.h>
 #include <GameEngine/Gameplay/BlackboardComponent.h>
+#include <GameEngine/Gameplay/SpawnComponent.h>
 #include <GameEngine/Physics/CharacterControllerComponent.h>
 
 ezAiAction::ezAiAction() = default;
@@ -309,7 +310,10 @@ ezAiActionResult ezAiActionBlackboardSetEntry::Execute(ezGameObject* pOwner, ezT
 
 void ezAiActionBlackboardSetEntry::Cancel(ezGameObject* pOwner)
 {
-  Reset();
+  if (!m_bNoCancel)
+  {
+    Reset();
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -355,6 +359,62 @@ ezAiActionResult ezAiActionBlackboardWait::Execute(ezGameObject* pOwner, ezTime 
 }
 
 void ezAiActionBlackboardWait::Cancel(ezGameObject* pOwner)
+{
+  Reset();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+EZ_IMPLEMENT_AICMD(ezAiActionBlackboardSetAndWait);
+
+ezAiActionBlackboardSetAndWait::ezAiActionBlackboardSetAndWait() = default;
+ezAiActionBlackboardSetAndWait::~ezAiActionBlackboardSetAndWait() = default;
+
+void ezAiActionBlackboardSetAndWait::Reset()
+{
+  m_sEntryName.Clear();
+  m_SetValue = {};
+  m_WaitValue = {};
+  m_bEqualsWaitValue = true;
+}
+
+void ezAiActionBlackboardSetAndWait::GetDebugDesc(ezStringBuilder& inout_sText)
+{
+  inout_sText.Format("Set BB '{}' to {}, wait {} '{}'", m_sEntryName.GetHash(), m_SetValue, m_bEqualsWaitValue ? "==" : "!=", m_WaitValue);
+}
+
+ezAiActionResult ezAiActionBlackboardSetAndWait::Execute(ezGameObject* pOwner, ezTime tDiff)
+{
+  if (m_sEntryName.IsEmpty())
+    return ezAiActionResult::Finished; // or canceled
+
+  auto pBlackboard = ezBlackboardComponent::FindBlackboard(pOwner);
+
+  if (pBlackboard == nullptr)
+  {
+    return ezAiActionResult::Failed;
+  }
+
+  if (m_SetValue.IsValid())
+  {
+    if (pBlackboard->SetEntryValue(m_sEntryName, m_SetValue).Failed())
+      return ezAiActionResult::Failed;
+
+    m_SetValue = {};
+  }
+
+  const ezVariant val = pBlackboard->GetEntryValue(m_sEntryName, m_WaitValue);
+  const bool bIsEqual = (val == m_WaitValue);
+
+  if (m_bEqualsWaitValue == bIsEqual)
+    return ezAiActionResult::Finished;
+
+  return ezAiActionResult::Succeded;
+}
+
+void ezAiActionBlackboardSetAndWait::Cancel(ezGameObject* pOwner)
 {
   Reset();
 }
@@ -427,4 +487,47 @@ ezAiActionResult ezAiActionCCMoveTo::Execute(ezGameObject* pOwner, ezTime tDiff)
 void ezAiActionCCMoveTo::Cancel(ezGameObject* pOwner)
 {
   m_fSpeed = 0.0f;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+EZ_IMPLEMENT_AICMD(ezAiActionSpawn);
+
+ezAiActionSpawn::ezAiActionSpawn() = default;
+ezAiActionSpawn::~ezAiActionSpawn() = default;
+
+void ezAiActionSpawn::Reset()
+{
+  m_sChildObjectName.Clear();
+}
+
+void ezAiActionSpawn::GetDebugDesc(ezStringBuilder& inout_sText)
+{
+  inout_sText.Format("Spawn: {}", m_sChildObjectName.GetHash());
+}
+
+ezAiActionResult ezAiActionSpawn::Execute(ezGameObject* pOwner, ezTime tDiff)
+{
+  if (m_sChildObjectName.IsEmpty())
+    return ezAiActionResult::Finished;
+
+  ezGameObject* pSpawner = pOwner->FindChildByName(m_sChildObjectName);
+  if (pSpawner == nullptr)
+    return ezAiActionResult::Failed;
+
+  ezSpawnComponent* pSpawn = nullptr;
+  if (!pSpawner->TryGetComponentOfBaseType(pSpawn))
+    return ezAiActionResult::Failed;
+
+  if (pSpawn->TriggerManualSpawn())
+    return ezAiActionResult::Finished;
+  else
+    return ezAiActionResult::Succeded; // wait
+}
+
+void ezAiActionSpawn::Cancel(ezGameObject* pOwner)
+{
+  m_sChildObjectName.Clear();
 }

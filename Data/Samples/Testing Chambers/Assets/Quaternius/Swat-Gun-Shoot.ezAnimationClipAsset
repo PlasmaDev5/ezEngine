@@ -14,7 +14,7 @@ o
 			s{"Assets/Quaternius/Swat.gltf"}
 		}
 		Uuid %DocumentID{u4{15671348842831321223,5145194443736537409}}
-		u4 %Hash{6292800833645853583}
+		u4 %Hash{11481091572338177086}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps{}
@@ -29,12 +29,23 @@ Objects
 {
 o
 {
+	Uuid %id{u4{11797924181291841424,5176765859673383933}}
+	s %t{"ezEventTrackControlPointData"}
+	u3 %v{1}
+	p
+	{
+		s %Event{"gun.shoot"}
+		i4 %Tick{0}
+	}
+}
+o
+{
 	Uuid %id{u4{810079714636454745,5199930102233297660}}
 	s %t{"ezAnimationClipAssetProperties"}
 	u3 %v{3}
 	p
 	{
-		b %Additive{1}
+		b %Additive{0}
 		VarArray %AvailableClips
 		{
 			s{"Death"}
@@ -93,7 +104,10 @@ o
 	u3 %v{3}
 	p
 	{
-		VarArray %ControlPoints{}
+		VarArray %ControlPoints
+		{
+			Uuid{u4{11797924181291841424,5176765859673383933}}
+		}
 	}
 }
 }

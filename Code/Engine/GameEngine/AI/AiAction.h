@@ -210,6 +210,7 @@ public:
   virtual ezAiActionResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
   virtual void Cancel(ezGameObject* pOwner) override;
 
+  bool m_bNoCancel = false;
   ezTempHashedString m_sEntryName;
   ezVariant m_Value;
 };
@@ -240,6 +241,29 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
+class EZ_GAMEENGINE_DLL ezAiActionBlackboardSetAndWait : public ezAiAction
+{
+  EZ_DECLARE_AICMD(ezAiActionBlackboardSetAndWait);
+
+public:
+  ezAiActionBlackboardSetAndWait();
+  ~ezAiActionBlackboardSetAndWait();
+
+  virtual void Reset() override;
+  virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
+  virtual ezAiActionResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual void Cancel(ezGameObject* pOwner) override;
+
+  ezTempHashedString m_sEntryName;
+  ezVariant m_SetValue;
+  ezVariant m_WaitValue;
+  bool m_bEqualsWaitValue = true;
+};
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
 class EZ_GAMEENGINE_DLL ezAiActionCCMoveTo : public ezAiAction
 {
   EZ_DECLARE_AICMD(ezAiActionCCMoveTo);
@@ -257,4 +281,24 @@ public:
   ezGameObjectHandle m_hTargetObject;
   float m_fSpeed = 0.0f;
   float m_fReachedDistSQR = 1.0f;
+};
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+class EZ_GAMEENGINE_DLL ezAiActionSpawn : public ezAiAction
+{
+  EZ_DECLARE_AICMD(ezAiActionSpawn);
+
+public:
+  ezAiActionSpawn();
+  ~ezAiActionSpawn();
+
+  virtual void Reset() override;
+  virtual void GetDebugDesc(ezStringBuilder& inout_sText) override;
+  virtual ezAiActionResult Execute(ezGameObject* pOwner, ezTime tDiff) override;
+  virtual void Cancel(ezGameObject* pOwner) override;
+
+  ezTempHashedString m_sChildObjectName;
 };

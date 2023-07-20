@@ -19,7 +19,7 @@ public:
   virtual ~ezAiBehavior();
 
   virtual ezAiScoredGoal DetermineBestGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup) = 0;
-  virtual void SetUpActions(const ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) = 0;
+  virtual void SetUpActions(ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ public:
   ~ezAiBehaviorGoToPOI();
 
   virtual ezAiScoredGoal DetermineBestGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup) override;
-  virtual void SetUpActions(const ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) override;
+  virtual void SetUpActions(ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) override;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -47,5 +47,19 @@ public:
   ~ezAiBehaviorWander();
 
   virtual ezAiScoredGoal DetermineBestGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup) override;
-  virtual void SetUpActions(const ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) override;
+  virtual void SetUpActions(ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) override;
+};
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+class EZ_GAMEENGINE_DLL ezAiBehaviorShoot : public ezAiBehavior
+{
+public:
+  ezAiBehaviorShoot();
+  ~ezAiBehaviorShoot();
+
+  virtual ezAiScoredGoal DetermineBestGoal(ezGameObject& owner, const ezAiGoalGeneratorGroup& goalGroup) override;
+  virtual void SetUpActions(ezGameObject& owner, const ezAiGoal* pGoal, ezAiActionQueue& inout_ActionQueue) override;
 };

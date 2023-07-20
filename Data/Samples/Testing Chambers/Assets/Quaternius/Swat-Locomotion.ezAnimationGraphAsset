@@ -11,7 +11,7 @@ o
 		s %AssetType{"Animation Graph"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{11835404266047592328,5603532126957282118}}
-		u4 %Hash{5858946635782307794}
+		u4 %Hash{9977920286160921651}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps
@@ -21,6 +21,7 @@ o
 			s{"{ 8c3b872e-99c6-45c3-a9de-7c031ed47718 }"}
 			s{"{ 98f01417-3929-4b3d-8eac-767073981c1f }"}
 			s{"{ 9bd065e8-e155-491d-b3fd-8c09f12b206b }"}
+			s{"{ b251ccd2-51a5-4dd0-98e6-2c8b5e03c72a }"}
 			s{"{ fdaf521b-ad75-4796-8d36-70f63b44b37b }"}
 		}
 		VarArray %References
@@ -30,6 +31,7 @@ o
 			s{"{ 8c3b872e-99c6-45c3-a9de-7c031ed47718 }"}
 			s{"{ 98f01417-3929-4b3d-8eac-767073981c1f }"}
 			s{"{ 9bd065e8-e155-491d-b3fd-8c09f12b206b }"}
+			s{"{ b251ccd2-51a5-4dd0-98e6-2c8b5e03c72a }"}
 			s{"{ fdaf521b-ad75-4796-8d36-70f63b44b37b }"}
 		}
 	}
@@ -295,7 +297,10 @@ o
 			Uuid{u4{109357240697358750,5626015515207120111}}
 			Uuid{u4{11720195392477949812,5727066025610009817}}
 		}
-		VarArray %IncludeGraphs{}
+		VarArray %IncludeGraphs
+		{
+			s{"{ b251ccd2-51a5-4dd0-98e6-2c8b5e03c72a }"}
+		}
 	}
 }
 o

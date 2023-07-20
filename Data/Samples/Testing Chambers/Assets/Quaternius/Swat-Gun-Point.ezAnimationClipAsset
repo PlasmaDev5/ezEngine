@@ -14,7 +14,7 @@ o
 			s{"Assets/Quaternius/Swat.gltf"}
 		}
 		Uuid %DocumentID{u4{3991939179971490983,4649842305595049797}}
-		u4 %Hash{11901197534723631699}
+		u4 %Hash{14470702513482502466}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps{}
@@ -27,16 +27,6 @@ o
 }
 Objects
 {
-o
-{
-	Uuid %id{u4{6091208007265832223,2116223182626929}}
-	s %t{"ezEventTrackData"}
-	u3 %v{3}
-	p
-	{
-		VarArray %ControlPoints{}
-	}
-}
 o
 {
 	Uuid %id{u4{7577414125486176121,4704577964091810048}}
@@ -73,10 +63,10 @@ o
 			s{"Wave"}
 		}
 		Vec3 %ConstantRootMotion{f{0,0,0}}
-		Uuid %EventTrack{u4{6091208007265832223,2116223182626929}}
+		Uuid %EventTrack{u4{16192097021451478241,17756426710326492860}}
 		s %File{"Assets/Quaternius/Swat.gltf"}
 		u3 %FirstFrame{0}
-		u3 %NumFrames{0}
+		u3 %NumFrames{1}
 		s %PreviewMesh{"{ 95d27ddc-19e0-4921-8f15-6db4850cbe8a }"}
 		s %RootMotion{"ezRootMotionSource::None"}
 		s %UseAnimationClip{"Idle_Gun_Pointing"}
@@ -84,7 +74,7 @@ o
 }
 o
 {
-	Uuid %id{u4{3828862359930040103,5990387393295129771}}
+	Uuid %id{u4{18096612296587978288,6449934965513159559}}
 	s %t{"ezDocumentRoot"}
 	u3 %v{1}
 	s %n{"ObjectTree"}
@@ -94,6 +84,16 @@ o
 		{
 			Uuid{u4{7577414125486176121,4704577964091810048}}
 		}
+	}
+}
+o
+{
+	Uuid %id{u4{16192097021451478241,17756426710326492860}}
+	s %t{"ezEventTrackData"}
+	u3 %v{3}
+	p
+	{
+		VarArray %ControlPoints{}
 	}
 }
 }

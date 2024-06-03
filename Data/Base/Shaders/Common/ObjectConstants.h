@@ -7,6 +7,8 @@ struct EZ_SHADER_STRUCT ezPerInstanceData
 {
   TRANSFORM(ObjectToWorld);
   TRANSFORM(ObjectToWorldNormal);
+  TRANSFORM(LastObjectToWorld);
+  TRANSFORM(LastObjectToWorldNormal);
   FLOAT1(BoundingSphereRadius);
   UINT1(GameObjectID);
   UINT1(VertexColorAccessData);
@@ -29,7 +31,7 @@ Buffer<uint> perInstanceVertexColors;
 
 EZ_DEFINE_AS_POD_TYPE(ezPerInstanceData);
 
-EZ_CHECK_AT_COMPILETIME(sizeof(ezPerInstanceData) == 144);
+EZ_CHECK_AT_COMPILETIME(sizeof(ezPerInstanceData) == 240);
 #endif
 
 CONSTANT_BUFFER(ezObjectConstants, 2)

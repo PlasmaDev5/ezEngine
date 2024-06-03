@@ -197,6 +197,7 @@ public:
   ezResult DrawMeshBuffer(ezUInt32 uiPrimitiveCount = 0xFFFFFFFF, ezUInt32 uiFirstPrimitive = 0, ezUInt32 uiInstanceCount = 1);
 
   ezResult Dispatch(ezUInt32 uiThreadGroupCountX, ezUInt32 uiThreadGroupCountY = 1, ezUInt32 uiThreadGroupCountZ = 1);
+  ezResult DispatchIndirect(ezGALBufferHandle hIndirectArgumentBuffer, ezUInt32 uiArgumentOffsetInBytes);
 
   ezResult ApplyContextStates(bool bForce = false);
   void ResetContextState();

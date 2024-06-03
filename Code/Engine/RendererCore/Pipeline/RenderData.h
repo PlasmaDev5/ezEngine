@@ -50,6 +50,7 @@ public:
 
   ezUInt64 GetCategorySortingKey(Category category, const ezCamera& camera) const;
 
+  ezTransform m_LastGlobalTransform = ezTransform::MakeIdentity();
   ezTransform m_GlobalTransform = ezTransform::MakeIdentity();
   ezBoundingBoxSphere m_GlobalBounds;
 

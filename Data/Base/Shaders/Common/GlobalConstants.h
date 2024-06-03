@@ -45,6 +45,18 @@ CONSTANT_BUFFER(ezGlobalConstants, 0)
   [2];
   MAT4(ScreenToWorldMatrix)
   [2];
+  MAT4(LastCameraToScreenMatrix)
+  [2];
+  MAT4(LastScreenToCameraMatrix)
+  [2];
+  MAT4(LastWorldToCameraMatrix)
+  [2];
+  MAT4(LastCameraToWorldMatrix)
+  [2];
+  MAT4(LastWorldToScreenMatrix)
+  [2];
+  MAT4(LastScreenToWorldMatrix)
+  [2];
 
   FLOAT4(ViewportSize); // x = width, y = height, z = 1 / width, w = 1 / height
   FLOAT4(ClipPlanes);   // x = near, y = far, z = 1 / far
@@ -58,6 +70,8 @@ CONSTANT_BUFFER(ezGlobalConstants, 0)
 
   INT1(RenderPass);
   UINT1(NumMsaaSamples);
+  
+  BOOL1(BlueNoisePhase);
 };
 
 #include "CameraConstantsAccess.h"

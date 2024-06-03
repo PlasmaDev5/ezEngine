@@ -11,6 +11,7 @@ SHADING_MODE = SHADING_MODE_FULLBRIGHT
 SHADING_QUALITY = SHADING_QUALITY_NORMAL
 CAMERA_MODE
 VERTEX_SHADER_RENDER_TARGET_ARRAY_INDEX
+GAMEOBJECT_VELOCITY
 
 [RENDERSTATE]
 
@@ -45,10 +46,10 @@ float3 GetNormal()
 float3 GetDiffuseColor()
 {
   float3 normal = normalize(G.Input.Normal);
-  
+
   uint compressedSkyVisibility = asuint(GetInstanceData().Color.r);
   float skyVisibility = EvaluateCompressedSkyVisibility(compressedSkyVisibility, normal);
-  
+
   return SrgbToLinear(skyVisibility);
 }
 

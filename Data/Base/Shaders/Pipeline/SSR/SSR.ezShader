@@ -1,0 +1,216 @@
+[PLATFORMS]
+ALL
+
+[PERMUTATIONS]
+SHADING_QUALITY = SHADING_QUALITY_NORMAL
+
+[COMPUTESHADER]
+
+#include <Shaders/Common/Common.h>
+#include <Shaders/Common/Lighting.h>
+#include <Shaders/Pipeline/SSR/SSRConstants.h>
+#include <Shaders/Common/DepthUtils.h>
+
+Texture2D ColorInput;
+Texture2D velocityTexture;
+Texture2D materialTexture;
+RWTexture2D<float4> SSROutput;
+RWTexture2D<float4> RoughnessOutput;
+
+static const float g_ssr_max_distance        = 1000.0f;
+static const uint g_ssr_max_steps            = 64;
+static const uint g_ssr_binary_search_steps  = 32;
+static const float g_ssr_thickness           = 0.0001f;
+static const float g_ssr_roughness_threshold = 0.8f;
+static const float g_ssr_depth_threshold = 8.0f;
+
+struct Surface
+{
+  void Build(float2 threadID)
+  {
+    normal = materialTexture[threadID].xyz;
+    roughness = materialTexture[threadID].w;
+    uv = (threadID.xy + 0.5f) / ViewportSize.xy;
+    uv.y = uv.y;
+    depth = GetDepth(uv);
+
+    position = ScreenCoordToWorldSpace(uv, depth);
+  }
+
+  float roughness;
+  float3 normal;
+  float3 position;
+  float depth;
+  float2 uv;
+};
+
+// An expansion on the interleaved gradient function from Jimenez 2014 http://goo.gl/eomGso
+float InterleavedGradientNoise(float2 screenPos, bool animate, bool animateEvenWithTaaOff)
+{
+  // temporal factor
+  float animate_    = saturate(1.0 + (float)animateEvenWithTaaOff) * (float)animate;
+  float frameStep  = float(Frame % 16) * RPC_16 * animate_;
+  screenPos.x     += frameStep * 4.7526;
+  screenPos.y     += frameStep * 3.1914;
+
+  float3 magic = float3(0.06711056f, 0.00583715f, 52.9829189f);
+  return frac(magic.z * frac(dot(screenPos, magic.xy)));
+}
+
+uint ComputeStepCount(float roughness)
+{
+  float stepsMin = 8.0;
+  float stepMax = g_ssr_max_steps;
+
+  return (uint) lerp(stepMax, stepsMin, roughness);
+}
+
+float ComputeAlpha(uint2 screen_pos, float2 hit_uv, float v_dot_r)
+{
+  float alpha = 1.0f;
+
+  alpha *= ScreenFade(hit_uv);                                // fade toward the edges of the screen
+  alpha *= IsValidUv(hit_uv);                                // fade if the uv is invalid
+  alpha  = lerp(alpha, 0.0f, smoothstep(0.9f, 1.0f, v_dot_r)); // fade when facing the camera
+
+  return saturate(alpha);
+}
+
+float GetDepthFromRay(float2 ray_pos, float2 ray_start, float ray_length, float z_start, float z_end)
+{
+  float alpha = length(ray_pos - ray_start) / ray_length;
+  return (z_start * z_end) / lerp(z_end, z_start, alpha);
+}
+
+bool IntersectDepthBuffer(float2 ray_pos, float2 ray_start, float ray_length, float z_start, float z_end, out float depth_delta)
+{
+  float depth_ray  = GetDepthFromRay(ray_pos, ray_start, ray_length, z_start, z_end);
+  float depth_real = GetLinearDepth(ray_pos);
+  depth_delta      = (depth_ray - depth_real);
+
+  return depth_delta >= 0.0f;
+}
+
+float3 ComuteRayEnd(float3 ray_start_vs, float3 ray_dir_vs)
+{
+  // calculate intersection with the near and far planes of the view frustum
+  // t_near and t_far represent the distances along the ray to these intersections
+  float t_near = (ClipPlanes.x - ray_start_vs.z) / ray_dir_vs.z;
+  float t_far  = (ClipPlanes.y - ray_start_vs.z) / ray_dir_vs.z;
+
+  // determine which of these distances to use based on their positivity
+  // the goal is to find the point where the ray first intersects the frustum
+  float t = (t_near > 0) ? t_near : t_far;
+  if (t <= 0) // If both distances are negative, take the larger one
+  {
+    t = max(t_near, t_far);
+  }
+
+  // calculate the intersection point using the determined distance (t)
+  // this is the point where the ray either enters or exits the camera's view frustum
+  return ray_start_vs + ray_dir_vs * t;
+}
+
+
+float2 TraceRay(uint2 screen_pos, float3 ray_start_vs, float3 ray_dir_vs, float roughness, out float reflection_distance)
+{
+  float3 ray_end_vs       = ComuteRayEnd(ray_start_vs, ray_dir_vs);
+  float2 ray_start        = ViewToUV(ray_start_vs);
+  float2 ray_end          = ViewToUV(ray_end_vs);
+  uint step_count         = ComputeStepCount(roughness);
+  float2 ray_start_to_end = ray_end - ray_start;
+  float ray_length        = length(ray_start_to_end);
+  float2 ray_step_uv      = (ray_start_to_end + FLT_MIN) / (float)(step_count);
+  float3 ray_step_vs      = (ray_end_vs - ray_start_vs) / (float)(step_count);
+  float2 ray_pos          = ray_start;
+
+  // adjust position with some noise
+  float offset = InterleavedGradientNoise(screen_pos, false, true);
+  ray_pos      += ray_step_uv * offset;
+
+  // adaptive ray-marching variables
+  const float min_step_size = 0.1f;          // minimum step size
+  const float max_step_size = 1.0f;          // maximum step size
+  float current_step_size   = max_step_size; // start with the largest step
+
+  // binary search variables
+  float depth_delta = 0.0f;
+  float step_size   = 1.0;
+
+  // ray-march
+  reflection_distance = 0.0f;
+  for (uint i = 0; i < step_count; i++)
+  {
+    // early exit if the ray is out of screen
+    if (!IsValidUv(ray_pos))
+      return -1.0f;
+
+    if (IntersectDepthBuffer(ray_pos, ray_start, ray_length, ray_start_vs.z, ray_end_vs.z, depth_delta))
+    {
+      // adjust step size based on depth delta
+      float depth_difference = abs(depth_delta);
+      current_step_size      = lerp(min_step_size, max_step_size, depth_difference / g_ssr_depth_threshold);
+      current_step_size      = max(current_step_size, min_step_size);
+
+      // test if we are within the threshold
+      if (depth_difference <= g_ssr_depth_threshold)
+        return ray_pos;
+
+      // adjust ray position
+      ray_pos += sign(depth_delta) * ray_step_uv * current_step_size;
+    }
+    else
+    {
+      // reset step size to max if not intersecting
+      current_step_size  = max_step_size;
+      ray_pos           += ray_step_uv * current_step_size;
+    }
+
+    reflection_distance += length(ray_step_vs * current_step_size);
+  }
+
+  return -1.0f;
+}
+
+[numthreads(POSTPROCESS_BLOCKSIZE, POSTPROCESS_BLOCKSIZE, 1)]
+  void main(uint3 thread_id : SV_DispatchThreadID)
+{
+  // Out of bounds check
+  if (any(int2(thread_id.xy) >= ViewportSize.xy))
+    return;
+
+  SSROutput[thread_id.xy] = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+  // Construct surface
+  Surface surface;
+  surface.Build(thread_id.xy);
+
+  //   // compute early exit cases
+  //     bool early_exit_1 = pass_is_opaque() && surface.is_transparent(); // if this is an opaque pass, ignore all transparent pixels
+  //     bool early_exit_2 = pass_is_transparent() && surface.is_opaque(); // if this is a transparent pass, ignore all opaque pixels
+  //     bool early_exit_3 = surface.is_sky();                             // skip sky pixels
+  //     if (early_exit_1 || early_exit_2 || early_exit_3)
+  //         return;
+
+  // compute reflection direction in view space
+  float3 normal = WorldToView(surface.normal, false);
+  float3 position = WorldToView(surface.position, true);
+  float3 cameraToPixel = normalize(position);
+  float3 reflection = normalize(reflect(cameraToPixel, normal));
+  float VdotR = dot(-cameraToPixel, reflection);
+
+  // trace
+  float reflectionDistance = 0.0f;
+  float2 hitUV = TraceRay(thread_id.xy, position, reflection, surface.roughness, reflectionDistance);
+  float alpha = ComputeAlpha(thread_id.xy, hitUV, VdotR);
+  float3 reflectionColor = ColorInput.SampleLevel(LinearClampSampler, hitUV, 0).rgb * alpha; // modulate with alpha because invalid UVs will get clamped colors
+
+  // determine reflection roughness
+  float maxReflectionDistance = 1.0f;
+  float distanceAttenuation = smoothstep(0.0f, maxReflectionDistance, reflectionDistance);
+  float reflectionRoughness = lerp(surface.roughness, clamp(surface.roughness * 1.5f, 0.0f, 1.0f), distanceAttenuation);
+  // reflectionRoughness          = surface.roughness;
+
+  SSROutput[thread_id.xy] = float4(reflectionColor, alpha);
+  RoughnessOutput[thread_id.xy] = (reflectionRoughness * reflectionRoughness) * 10.0f;
+}

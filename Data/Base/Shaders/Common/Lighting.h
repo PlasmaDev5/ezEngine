@@ -10,6 +10,7 @@
 #include <Shaders/Common/LightData.h>
 
 Texture2DArray SSAOTexture;
+Texture2D SSRTexture;
 
 Texture2D ShadowAtlasTexture;
 SamplerComparisonState ShadowSampler;
@@ -563,8 +564,11 @@ AccumulatedLight CalculateLighting(ezMaterialData matData, ezPerClusterData clus
   float3 skyLight = EvaluateAmbientCube(SkyIrradianceTexture, SkyIrradianceIndex, matData.worldNormal).rgb;
   totalLight.diffuseLight += matData.diffuseColor * skyLight * occlusion;
 
+  float4 ssr = SSRTexture.SampleLevel(PointClampSampler, float3((screenPosition.xy * ViewportSize.zw) - matData.velocity, s_ActiveCameraEyeIndex), 0.0f);
+
   // indirect specular
-  totalLight.specularLight += matData.specularColor * ComputeReflection(matData, viewVector, clusterData) * occlusion;
+  totalLight.specularLight += matData.specularColor * lerp(ComputeReflection(matData, viewVector, clusterData), ssr.xyz, ssr.w) ;
+
   // totalLight.specularLight += ComputeReflection(matData, viewVector, clusterData);
 
   // enable once we have proper sky visibility

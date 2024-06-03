@@ -27,7 +27,7 @@ EZ_BEGIN_COMPONENT_TYPE(ezHeightfieldComponent, 2, ezComponentMode::Static)
     EZ_ACCESSOR_PROPERTY("TexCoordOffset", GetTexCoordOffset, SetTexCoordOffset)->AddAttributes(new ezDefaultValueAttribute(ezVec2(0))),
     EZ_ACCESSOR_PROPERTY("TexCoordScale", GetTexCoordScale, SetTexCoordScale)->AddAttributes(new ezDefaultValueAttribute(ezVec2(1))),
     EZ_ACCESSOR_PROPERTY("GenerateCollision", GetGenerateCollision, SetGenerateCollision)->AddAttributes(new ezDefaultValueAttribute(true)),
-    EZ_ACCESSOR_PROPERTY("ColMeshTesselation", GetColMeshTesselation, SetColMeshTesselation)->AddAttributes(new ezDefaultValueAttribute(ezVec2U32(64))),    
+    EZ_ACCESSOR_PROPERTY("ColMeshTesselation", GetColMeshTesselation, SetColMeshTesselation)->AddAttributes(new ezDefaultValueAttribute(ezVec2U32(64))),
     EZ_ACCESSOR_PROPERTY("IncludeInNavmesh", GetIncludeInNavmesh, SetIncludeInNavmesh)->AddAttributes(new ezDefaultValueAttribute(true)),
   }
   EZ_END_PROPERTIES;
@@ -150,6 +150,7 @@ void ezHeightfieldComponent::OnMsgExtractRenderData(ezMsgExtractRenderData& msg)
 
     ezMeshRenderData* pRenderData = ezCreateRenderDataForThisFrame<ezMeshRenderData>(GetOwner());
     {
+      pRenderData->m_LastGlobalTransform = GetOwner()->GetLastGlobalTransform();
       pRenderData->m_GlobalTransform = GetOwner()->GetGlobalTransform();
       pRenderData->m_GlobalBounds = GetOwner()->GetGlobalBounds();
       pRenderData->m_hMesh = m_hMesh;

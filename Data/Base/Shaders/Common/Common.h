@@ -8,7 +8,20 @@ SamplerState LinearClampSampler;
 SamplerState PointSampler;
 SamplerState PointClampSampler;
 
-const static float PI = 3.1415926535897932f;
+static const float PI                  = 3.14159265f;
+static const float PI2                 = 6.28318530f;
+static const float PI4                 = 12.5663706f;
+static const float INV_PI              = 0.31830988f;
+static const float PI_HALF             = PI * 0.5f;
+static const float FLT_MIN             = 0.00000001f;
+static const float FLT_MAX_10          = 511.0f;
+static const float FLT_MAX_11          = 1023.0f;
+static const float FLT_MAX_14          = 8191.0f;
+static const float FLT_MAX_16          = 32767.0f;
+static const float FLT_MAX_16U         = 65535.0f;
+static const float RPC_16              = 0.0625f;
+
+#define sqr(a) ((a) * (a))
 
 float4 RGBA8ToFloat4(uint x)
 {
@@ -94,6 +107,15 @@ float InterleavedGradientNoise(float2 screenSpacePosition)
   return frac(magic.z * frac(dot(screenSpacePosition, magic.xy)));
 }
 
+float InterleavedGradientNoise(float2 uv, uint frameCount)
+{
+  const float2 magicFrameScale = float2(47, 17) * 0.695;
+  uv += frameCount * magicFrameScale;
+
+  const float3 magic = float3(0.06711056, 0.00583715, 52.9829189);
+  return frac(magic.z * frac(dot(uv, magic.xy)));
+}
+
 float3 NormalizeAndGetLength(float3 v, out float len)
 {
   float squaredLen = dot(v, v);
@@ -142,4 +164,159 @@ float SmoothMinCubic(float a, float b, float k = 0.1)
 {
   float h = max(k - abs(a - b), 0.0) / k;
   return min(a, b) - h * h * h * k * (1.0 / 6.0);
+}
+
+float2 Ndc2Uv(float2 x)
+{
+  return x * float2(0.5f, -0.5f) + 0.5f;
+}
+
+inline uint flatten2D(uint2 coord, uint2 dim)
+{
+  return coord.x + coord.y * dim.x;
+}
+// flattened array index to 2D array index
+inline uint2 unflatten2D(uint idx, uint2 dim)
+{
+  return uint2(idx % dim.x, idx / dim.x);
+}
+
+float ScreenFade(float2 uv)
+{
+    float2 fade = max(0.0f, 12.0f * abs(uv - 0.5f) - 5.0f);
+    return saturate(1.0f - dot(fade, fade));
+}
+
+bool IsValidUv(float2 value)
+{
+  return (value.x >= 0.0f && value.x <= 1.0f) && (value.y >= 0.0f && value.y <= 1.0f);
+}
+
+/*------------------------------------------------------------------------------
+    PACKING/UNPACKING
+------------------------------------------------------------------------------*/
+float3 unpack(float3 value)
+{
+  return value * 2.0f - 1.0f;
+}
+
+float3 pack(float3 value)
+{
+  return value * 0.5f + 0.5f;
+}
+
+float2 unpack(float2 value)
+{
+  return value * 2.0f - 1.0f;
+}
+
+float2 pack(float2 value)
+{
+  return value * 0.5f + 0.5f;
+}
+
+float unpack(float value)
+{
+  return value * 2.0f - 1.0f;
+}
+
+float pack(float value)
+{
+  return value * 0.5f + 0.5f;
+}
+
+float pack_floats(float x, float y)
+{
+  uint xScaled = x * 0xFFFF;
+  uint yScaled = y * 0xFFFF;
+  uint xyPacked = (xScaled << 16) | (yScaled & 0xFFFF);
+  return asfloat(xyPacked);
+}
+
+void unpack_floats(out float x, out float y, float packedFloat)
+{
+  uint packedUint = asuint(packedFloat);
+  x = (packedUint >> 16) / 65535.0f;
+  y = (packedUint & 0xFFFF) / 65535.0f;
+}
+
+float pack_uint32_to_float16(uint i)
+{
+  return (float)i / FLT_MAX_16;
+}
+
+uint unpack_float16_to_uint32(float f)
+{
+  return round(f * FLT_MAX_16);
+}
+
+float pack_float_int(float f, uint i, uint numBitI, uint numBitTarget)
+{
+  // Constant optimize by compiler
+  float precision = float(1U << numBitTarget);
+  float maxi = float(1U << numBitI);
+  float precisionMinusOne = precision - 1.0;
+  float t1 = ((precision / maxi) - 1.0) / precisionMinusOne;
+  float t2 = (precision / maxi) / precisionMinusOne;
+
+  // Code
+  return t1 * f + t2 * float(i);
+}
+
+void unpack_float_int(float val, uint numBitI, uint numBitTarget, out float f, out uint i)
+{
+  // Constant optimize by compiler
+  float precision = float(1U << numBitTarget);
+  float maxi = float(1U << numBitI);
+  float precisionMinusOne = precision - 1.0;
+  float t1 = ((precision / maxi) - 1.0) / precisionMinusOne;
+  float t2 = (precision / maxi) / precisionMinusOne;
+
+  // Code
+  // extract integer part
+  // + rcp(precisionMinusOne) to deal with precision issue
+  i = int((val / t2) + rcp(precisionMinusOne));
+  // Now that we have i, solve formula in PackFloatInt for f
+  // f = (val - t2 * float(i)) / t1 => convert in mads form
+  f = saturate((-t2 * float(i) + val) / t1); // Saturate in case of precision issue
+}
+
+float saturate_11(float x)
+{
+  return clamp(x, FLT_MIN, FLT_MAX_11);
+}
+
+float2 saturate_11(float2 x)
+{
+  return clamp(x, FLT_MIN, FLT_MAX_11);
+}
+
+float3 saturate_11(float3 x)
+{
+  return clamp(x, FLT_MIN, FLT_MAX_11);
+}
+
+float4 saturate_11(float4 x)
+{
+  return clamp(x, FLT_MIN, FLT_MAX_11);
+}
+
+float saturate_16(float x)
+{
+  return clamp(x, FLT_MIN, FLT_MAX_16);
+}
+
+float2 saturate_16(float2 x)
+{
+  return clamp(x, FLT_MIN, FLT_MAX_16);
+}
+
+float3 saturate_16(float3 x)
+{
+  return clamp(x, FLT_MIN, FLT_MAX_16);
+}
+
+float4 saturate_16(float4 x)
+{
+  return clamp(x, FLT_MIN, FLT_MAX_16);
 }

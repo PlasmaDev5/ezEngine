@@ -1102,6 +1102,13 @@ void ezRenderPipeline::Render(ezRenderContext* pRenderContext)
   auto& gc = pRenderContext->WriteGlobalConstants();
   for (int i = 0; i < 2; ++i)
   {
+    gc.LastCameraToScreenMatrix[i] = pViewData->m_LastProjectionMatrix[i];
+    gc.LastScreenToCameraMatrix[i] = pViewData->m_LastInverseProjectionMatrix[i];
+    gc.LastWorldToCameraMatrix[i] = pViewData->m_LastViewMatrix[i];
+    gc.LastCameraToWorldMatrix[i] = pViewData->m_LastInverseViewMatrix[i];
+    gc.LastWorldToScreenMatrix[i] = pViewData->m_LastViewProjectionMatrix[i];
+    gc.LastScreenToWorldMatrix[i] = pViewData->m_LastInverseViewProjectionMatrix[i];
+
     gc.CameraToScreenMatrix[i] = pViewData->m_ProjectionMatrix[i];
     gc.ScreenToCameraMatrix[i] = pViewData->m_InverseProjectionMatrix[i];
     gc.WorldToCameraMatrix[i] = pViewData->m_ViewMatrix[i];
@@ -1127,6 +1134,8 @@ void ezRenderPipeline::Render(ezRenderContext* pRenderContext)
 
   gc.Exposure = pCamera->GetExposure();
   gc.RenderPass = ezViewRenderMode::GetRenderPassForShader(pViewData->m_ViewRenderMode);
+
+  gc.BlueNoisePhase = (ezRenderWorld::GetFrameCounter() & 0xFF) * 1.6180339887f;
 
   ezRenderViewContext renderViewContext;
   renderViewContext.m_pCamera = pCamera;

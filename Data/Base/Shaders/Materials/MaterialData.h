@@ -17,6 +17,8 @@ struct ezMaterialData
   float occlusion;
   float opacity;
 
+  float2 velocity;
+
   float3 subsurfaceColor;
   float subsurfaceScatterPower;
   float subsurfaceShadowFalloff;

@@ -1,0 +1,103 @@
+[PLATFORMS]
+ALL
+
+[PERMUTATIONS]
+SHADING_QUALITY = SHADING_QUALITY_NORMAL
+BLUR_DIRECTION
+BLUR_PASS
+BLUR_RADIUS_FORMAT
+
+[COMPUTESHADER]
+
+#include <Shaders/Common/Common.h>
+#include <Shaders/Common/GlobalConstants.h>
+#include <Shaders/Pipeline/SSR/SSRConstants.h>
+#include <Shaders/Pipeline/BlurConstants.h>
+
+Texture2D InputTexture;
+
+#if BLUR_RADIUS_FORMAT == BLUR_RADIUS_FORMAT_TEXTURE
+Texture2D BlurTexture;
+#endif
+
+#if BLUR_PASS == BLUR_PASS_GAUSSIAN_BILATERAL
+#include <Shaders/Common/DepthUtils.h>
+Texture2D materialTexture;
+#endif
+
+RWTexture2D<float4> Output;
+
+float compute_gaussian_weight(int sample_distance, const float sigma2)
+{
+    float g = 1.0f / sqrt(PI2 * sigma2);
+    return (g * exp(-(sample_distance * sample_distance) / (2.0f * sigma2)));
+}
+
+float2 adjust_sample_uv(const float2 uv, const float2 direction)
+{
+    // during the vertical pass, the input texture is secondary scratch texture which belongs to the blur pass
+    // it's at least as big as the original input texture (to be blurred), so we have to adapt the sample uv
+    return lerp(uv, (trunc(uv * ViewportSize.xy) + 0.5f) / ViewportSize.xy, direction.y != 0.0f);
+}
+
+float3 gaussian_blur(const uint2 pos, const float2 uv, const float radius, const float sigma2, const float2 direction)
+{
+    #if BLUR_PASS == BLUR_PASS_GAUSSIAN_BILATERAL
+    const float center_depth   = GetLinearDepth(pos);
+    const float3 center_normal = materialTexture[pos].xyz;
+    #endif
+
+    float3 color  = 0.0f;
+    float weights = 0.0f;
+    for (int i = -radius; i < radius; i++)
+    {
+        float2 sample_uv     = uv + (i * direction);
+
+        float depth_awareness = 1.0f;
+        #if BLUR_PASS == BLUR_PASS_GAUSSIAN_BILATERAL
+        float sample_depth   = GetLinearDepth(sample_uv);
+        float3 sample_normal = materialTexture[sample_uv].xyz;
+        float awareness_depth  = saturate(0.1f - abs(center_depth - sample_depth));
+        float awareness_normal = saturate(dot(center_normal, sample_normal)) + FLT_MIN; // FLT_MIN prevents NaN
+        depth_awareness        = awareness_normal * awareness_depth;
+        #endif
+
+        float weight  = compute_gaussian_weight(i, sigma2) * depth_awareness;
+        color        += InputTexture.SampleLevel(LinearClampSampler, adjust_sample_uv(sample_uv, direction), 0).rgb * weight;
+        weights      += weight;
+    }
+
+    return color / weights;
+}
+
+[numthreads(POSTPROCESS_BLOCKSIZE, POSTPROCESS_BLOCKSIZE, 1)]
+void main(uint3 thread_id : SV_DispatchThreadID)
+{
+    if (any(int2(thread_id.xy) >= ViewportSize.xy))
+        return;
+
+    float4 color = InputTexture[thread_id.xy];
+
+    #if BLUR_RADIUS_FORMAT == BLUR_RADIUS_FORMAT_TEXTURE
+    const float radius      = clamp(BlurTexture[thread_id.xy].r, 0.0f, 100.0f) * BlurRadius;
+    #else
+    const float radius      =  BlurRadius;
+    #endif
+    const float sigma       = radius / 3.0f;
+
+    #if BLUR_DIRECTION == BLUR_DIRECTION_VERTICAL
+        const float2 direction  = float2(0.0f, 1.0f);
+    #else
+        const float2 direction  = float2(1.0f, 0.0f);
+    #endif
+
+    const float2 uv         = (thread_id.xy + 0.5f) / ViewportSize.xy;
+    const float2 texel_size = 1.0f / ViewportSize.xy;
+
+    #if BLUR_RADIUS_FORMAT == BLUR_RADIUS_FORMAT_TEXTURE
+    if (radius >= 1.0f)
+    #endif
+    color.rgb = gaussian_blur(thread_id.xy, uv, radius, sigma * sigma, direction * texel_size);
+
+    Output[thread_id.xy] = saturate_16(color);
+}

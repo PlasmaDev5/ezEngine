@@ -34,7 +34,7 @@ EZ_BEGIN_COMPONENT_TYPE(ezRopeRenderComponent, 2, ezComponentMode::Static)
     EZ_MESSAGE_HANDLER(ezMsgExtractRenderData, OnMsgExtractRenderData),
     EZ_MESSAGE_HANDLER(ezMsgRopePoseUpdated, OnRopePoseUpdated),
     EZ_MESSAGE_HANDLER(ezMsgSetColor, OnMsgSetColor),
-    EZ_MESSAGE_HANDLER(ezMsgSetMeshMaterial, OnMsgSetMeshMaterial),      
+    EZ_MESSAGE_HANDLER(ezMsgSetMeshMaterial, OnMsgSetMeshMaterial),
   }
   EZ_END_MESSAGEHANDLERS;
   EZ_BEGIN_ATTRIBUTES
@@ -109,6 +109,7 @@ void ezRopeRenderComponent::OnMsgExtractRenderData(ezMsgExtractRenderData& msg) 
 
   ezSkinnedMeshRenderData* pRenderData = ezCreateRenderDataForThisFrame<ezSkinnedMeshRenderData>(GetOwner());
   {
+    pRenderData->m_LastGlobalTransform = GetOwner()->GetLastGlobalTransform();
     pRenderData->m_GlobalTransform = GetOwner()->GetGlobalTransform();
     pRenderData->m_GlobalBounds = GetOwner()->GetGlobalBounds();
     pRenderData->m_hMesh = m_hMesh;

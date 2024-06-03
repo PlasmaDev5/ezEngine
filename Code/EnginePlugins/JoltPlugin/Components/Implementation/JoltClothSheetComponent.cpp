@@ -409,6 +409,7 @@ void ezJoltClothSheetComponent::OnMsgExtractRenderData(ezMsgExtractRenderData& m
   auto pRenderData = ezCreateRenderDataForThisFrame<ezJoltClothSheetRenderData>(GetOwner());
   pRenderData->m_uiUniqueID = GetUniqueIdForRendering();
   pRenderData->m_Color = m_Color;
+  pRenderData->m_LastGlobalTransform = GetOwner()->GetLastGlobalTransform();
   pRenderData->m_GlobalTransform = GetOwner()->GetGlobalTransform();
   pRenderData->m_uiBatchId = ezHashingUtils::StringHashTo32(m_hMaterial.GetResourceIDHash());
   pRenderData->m_uiSortingKey = pRenderData->m_uiBatchId;

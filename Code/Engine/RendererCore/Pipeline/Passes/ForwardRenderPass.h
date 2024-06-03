@@ -40,6 +40,8 @@ protected:
   virtual void RenderObjects(const ezRenderViewContext& renderViewContext) = 0;
 
   ezRenderPipelineNodePassThrougPin m_PinColor;
+  ezRenderPipelineNodePassThrougPin m_PinVelocity;
+  ezRenderPipelineNodePassThrougPin m_PinMaterial;
   ezRenderPipelineNodePassThrougPin m_PinDepthStencil;
 
   ezEnum<ezForwardRenderShadingQuality> m_ShadingQuality;

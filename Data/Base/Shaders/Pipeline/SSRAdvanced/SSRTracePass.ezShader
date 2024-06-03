@@ -1,0 +1,270 @@
+[PLATFORMS]
+ALL
+DEBUG
+
+[PERMUTATIONS]
+SHADING_QUALITY = SHADING_QUALITY_NORMAL
+
+[COMPUTESHADER]
+
+#include <Shaders/Common/Common.h>
+#include <Shaders/Common/Lighting.h>
+#include <Shaders/Pipeline/SSR/SSRConstants.h>
+#include <Shaders/Pipeline/SSRAdvanced/SSR.h>
+#include <Shaders/Common/DepthUtils.h>
+
+Texture2D ColorInput;
+Texture2D velocityTexture;
+Texture2D normalTexture;
+Texture2D materialTexture;
+Texture2D BlueNoise;
+Texture2D<float2> DepthHierarchy;
+Texture2D<float4> DepthInput;
+RWTexture2D<float4> SSROutput;
+RWTexture2D<float4> RoughnessOutput;
+
+static const float g_ssr_max_distance        = 1000.0f;
+static const uint g_ssr_max_steps            = 64;
+static const uint g_ssr_binary_search_steps  = 32;
+static const float g_ssr_thickness           = 0.0001f;
+static const float g_ssr_roughness_threshold = 0.8f;
+static const float g_ssr_depth_threshold = 8.0f;
+static const float traceThickness = 1.5;
+static const float blendScreenEdgeFade = 5.0f;
+static const float HiZTraceMostDetailedLevel = 0.0;
+static const float HiZTraceIterationsMax = 64;
+
+float2 GetMipResolution(float2 screenDimensions, int mipLevel)
+{
+  return screenDimensions * pow(0.5, mipLevel);
+}
+
+inline float4 blue_noise(uint2 pixel)
+{
+  return frac(BlueNoise[pixel % 128] + BlueNoisePhase);
+}
+
+struct Surface
+{
+  void Build(float2 threadID)
+  {
+    uint2 screenJitter = floor(blue_noise(uint2(0, 0)).xy);
+    jitter = screenJitter + threadID;
+
+    normal = materialTexture[jitter].xyz;
+    roughness = materialTexture[jitter].w;
+    uv = (jitter.xy + 0.5f) / ViewportSize.xy;
+    uv.y = uv.y;
+    depth = GetLinearDepth(uv);
+
+    position = ScreenCoordToWorldSpace(uv, depth);
+  }
+
+  float roughness;
+  float3 normal;
+  float3 position;
+  float depth;
+  float2 jitter;
+  float2 uv;
+};
+
+void InitialAdvanceRay(float3 origin, float3 direction, float2 currentMipResolution, float2 currentMipResolution_rcp, float2 floorOffset, float2 uvOffset, out float3 position, out float tCurrent)
+{
+  float2 currentMipPosition = currentMipResolution * origin.xy;
+
+  // Intersect ray with the half box that is pointing away from the ray origin.
+  float2 xyPlane = floor(currentMipPosition) + floorOffset;
+  xyPlane = xyPlane * currentMipResolution_rcp + uvOffset;
+
+  // o + d * t = p' => t = (p' - o) / d
+  float2 t = (xyPlane - origin.xy) / direction.xy;
+  tCurrent = min(t.x, t.y);
+  position = origin + tCurrent * direction;
+}
+
+bool AdvanceRay(float3 origin, float3 direction, float2 currentMipPosition, float2 currentMipResolution_rcp, float2 floorOffset, float2 uvOffset, float surfaceZ, inout float3 position, inout float tCurrent)
+{
+  // Create boundary planes
+  float2 xyPlane = floor(currentMipPosition) + floorOffset;
+  xyPlane = xyPlane * currentMipResolution_rcp + uvOffset;
+  float3 boundaryPlanes = float3(xyPlane, surfaceZ);
+
+  // Intersect ray with the half box that is pointing away from the ray origin.
+  // o + d * t = p' => t = (p' - o) / d
+  float3 t = (boundaryPlanes - origin) / direction;
+
+  // Prevent using z plane when shooting out of the depth buffer.
+  t.z = direction.z < 0 ? t.z : FLT_MAX_16;
+
+  // Choose nearest intersection with a boundary.
+  float tMin = min(min(t.x, t.y), t.z);
+
+  // Larger z means closer to the camera.
+  bool aboveSurface = surfaceZ < position.z;
+
+  // Decide whether we are able to advance the ray until we hit the xy boundaries or if we had to clamp it at the surface.
+  // We use the asuint comparison to avoid NaN / Inf logic, also we actually care about bitwise equality here to see if t_min is the t.z we fed into the min3 above.
+  bool skippedTile = asuint(tMin) != asuint(1.0 - t.z) && aboveSurface;
+
+  // Make sure to only advance the ray if we're still above the surface.
+  tCurrent = aboveSurface ? tMin : tCurrent;
+
+  // Advance ray
+  position = origin + tCurrent * direction;
+
+  return skippedTile;
+}
+
+// Based on: https://github.com/GPUOpen-Effects/FidelityFX-SSSR/tree/master
+// Requires origin and direction of the ray to be in screen space [0, 1] x [0, 1]
+float3 HierarchicalRaymarch(float3 origin, float3 direction, float2 screenSize, out bool validHit)
+{
+  // Start on mip with highest detail.
+  int currentMip = HiZTraceMostDetailedLevel;
+
+  // Could recompute these every iteration, but it's faster to hoist them out and update them.
+  float2 currentMipResolution = GetMipResolution(screenSize, currentMip);
+  float2 currentMipResolution_rcp = rcp(currentMipResolution);
+
+  // Offset to the bounding boxes uv space to intersect the ray with the center of the next pixel.
+  // This means we ever so slightly over shoot into the next region.
+  float2 uvOffset = 0.005 * exp2(HiZTraceMostDetailedLevel) / screenSize;
+  uvOffset = select(direction.xy < 0, -uvOffset, uvOffset);
+
+  // Offset applied depending on current mip resolution to move the boundary to the left/right upper/lower border depending on ray direction.
+  float2 floorOffset = select(direction.xy < 0, 0, 1);
+
+  // Initially advance ray to avoid immediate self intersections.
+  float tCurrent;
+  float3 position;
+  InitialAdvanceRay(origin, direction, currentMipResolution, currentMipResolution_rcp, floorOffset, uvOffset, position, tCurrent);
+
+  int i = 0;
+  while (i < HiZTraceIterationsMax && currentMip >= HiZTraceMostDetailedLevel)
+  {
+    if (any(position.xy < 0.0) || any(position.xy > 1.0))
+    {
+      validHit = false;
+      return position;
+    }
+
+    float2 currentMipPosition = currentMipResolution * position.xy;
+    float surfaceZ = DepthHierarchy.Load(int3(currentMipPosition, currentMip)).r;
+
+    bool skippedTile = AdvanceRay(origin, direction, currentMipPosition, currentMipResolution_rcp, floorOffset, uvOffset, surfaceZ, position, tCurrent);
+
+    currentMip += skippedTile ? 1 : -1;
+    currentMipResolution *= skippedTile ? 0.5 : 2;
+    currentMipResolution_rcp *= skippedTile ? 2 : 0.5;
+
+    i++;
+  }
+
+  validHit = (i <= HiZTraceIterationsMax);
+
+  return position;
+}
+
+float CalculateEdgeVignette(float2 hitPixel)
+{
+  float2 hitPixelNDC = hitPixel * 2.0 - 1.0;
+
+  //float maxDimension = min(1.0, max(abs(hitPixelNDC.x), abs(hitPixelNDC.y)));
+  //float attenuation = 1.0 - max(0.0, maxDimension - blendScreenEdgeFade) / (1.0 - blendScreenEdgeFade);
+
+  float2 vignette = saturate(abs(hitPixelNDC) * blendScreenEdgeFade - (blendScreenEdgeFade - 1.0f));
+  float attenuation = saturate(1.0 - dot(vignette, vignette));
+
+  return attenuation;
+}
+
+float ValidateHit(float3 hit, float hitDepth, float2 prevHitUV)
+{
+  float vignetteHit = CalculateEdgeVignette(hit.xy);
+  float vignetteHitPrev = CalculateEdgeVignette(prevHitUV);
+  float vignette = min(vignetteHit, vignetteHitPrev);
+
+  float3 surfaceViewPosition = ScreenCoordToViewSpace(hit.xy, hitDepth);
+  float3 hitViewPosition = ScreenCoordToViewSpace(hit.xy, hit.z);
+
+  float distance = length(surfaceViewPosition - hitViewPosition);
+  float confidence = 1.0 - smoothstep(0.0, traceThickness, distance);
+
+  return vignette * confidence;
+}
+
+[numthreads(POSTPROCESS_BLOCKSIZE, POSTPROCESS_BLOCKSIZE, 1)]
+  void main(uint3 thread_id : SV_DispatchThreadID)
+{
+  // Out of bounds check
+  if (any(int2(thread_id.xy) >= ViewportSize.xy))
+    return;
+
+  SSROutput[thread_id.xy] = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+  // Construct surface
+  Surface surface;
+  surface.Build(thread_id.xy);
+
+  if(RoughnessCutoff < surface.roughness)
+    return;
+
+  float4 H;
+  float3 L;
+
+  float3 N = surface.normal;
+  float3 P = ScreenCoordToWorldSpace(surface.uv, surface.depth);
+  float3 V = normalize(GetCameraPosition() - P);
+
+  if(surface.roughness > 0.5)
+  {
+    float3x3 tangentBasis = GetTangentBasis(N);
+    float3 tangentV = mul(tangentBasis, V);
+
+    const float2 bluenoise = blue_noise(surface.uv.xy).xy;
+
+    float2 Xi = bluenoise.xy;
+
+    Xi.y = lerp(Xi.y, 0.0f, GGX_IMPORTANCE_SAMPLE_BIAS);
+
+    H = ImportanceSampleVisibleGGX(SampleDisk(Xi), surface.roughness, tangentV);
+
+    H.xyz = mul(H.xyz, tangentBasis);
+
+    L = reflect(-V, H.xyz);
+  }
+  else
+  {
+    H = float4(N.xyz, 1.0f);
+    L = reflect(-V, H.xyz);
+  }
+
+
+
+  float4 rayStartClip = mul(GetWorldToScreenMatrix(), float4(P, 1)); // World to Clip
+  float4 rayEndClip = mul(GetWorldToScreenMatrix(), float4(P + L, 1));
+
+  float3 rayStartScreen = rayStartClip.xyz * rcp(rayStartClip.w);
+  float3 rayEndScreen = rayEndClip.xyz * rcp(rayEndClip.w);
+
+  rayStartScreen.xy = rayStartScreen.xy * float2(0.5, -0.5) + float2(0.5, 0.5);
+  rayEndScreen.xy = rayEndScreen.xy * float2(0.5, -0.5) + float2(0.5, 0.5);
+
+  float3 rayDirectionScreen = rayEndScreen - rayStartScreen;
+
+  bool validHit = false;
+  float3 hit = HierarchicalRaymarch(rayStartScreen, rayDirectionScreen, ViewportSize.xy, validHit);
+
+  float2 prevHitUV = hit.xy;
+
+  float hitDepth = DepthInput.SampleLevel(PointClampSampler, hit.xy, 0);
+  float confidence = validHit ? ValidateHit(hit, hitDepth, prevHitUV) : 0;
+
+  float4 indirectSpecular;
+  indirectSpecular.rgb = ColorInput.SampleLevel(PointClampSampler, prevHitUV, 0).rgb;
+
+  indirectSpecular.a = 1.0;
+
+  SSROutput[thread_id.xy] = indirectSpecular;
+  RoughnessOutput[thread_id.xy] = surface.roughness;
+}

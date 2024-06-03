@@ -10,6 +10,9 @@
 struct ezGALTextureCreationDescription;
 class ezStreamWriter;
 
+// TODO: REMOVE!!! This is a temp solution for testing SSR
+static ezGALTextureHandle m_tmp;
+
 /// \brief Passed to ezRenderPipelinePass::InitRenderPipelinePass to inform about
 /// existing connections on each input / output pin index.
 struct ezRenderPipelinePassConnection

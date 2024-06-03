@@ -60,7 +60,7 @@ o
 		b %Active{1}
 		Uuid %DepthStencil{u4{12374590631366029646,4661154216989813148}}
 		s %Name{"ShadowDepth"}
-		Vec2 %Node::Pos{f{0xC8069C43,0xE821AC43}}
+		Vec2 %Node::Pos{f{0xAF769343,0xE445BF43}}
 	}
 }
 o

@@ -165,6 +165,13 @@ ezGALRenderCommandEncoder* ezRenderContext::BeginRendering(ezGALPass* pGALPass, 
     SetShaderPermutationVariable("MSAA", "FALSE");
   }
 
+#if EZ_ENABLED(EZ_GAMEOBJECT_VELOCITY)
+  SetShaderPermutationVariable("GAMEOBJECT_VELOCITY", "TRUE");
+#else
+  SetShaderPermutationVariable("GAMEOBJECT_VELOCITY", "FALSE");
+#endif
+
+
   auto& gc = WriteGlobalConstants();
   gc.ViewportSize = ezVec4(viewport.width, viewport.height, 1.0f / viewport.width, 1.0f / viewport.height);
   gc.NumMsaaSamples = msaaSampleCount;
@@ -605,6 +612,17 @@ ezResult ezRenderContext::Dispatch(ezUInt32 uiThreadGroupCountX, ezUInt32 uiThre
   }
 
   return GetComputeCommandEncoder()->Dispatch(uiThreadGroupCountX, uiThreadGroupCountY, uiThreadGroupCountZ);
+}
+
+ezResult ezRenderContext::DispatchIndirect(ezGALBufferHandle hIndirectArgumentBuffer, ezUInt32 uiArgumentOffsetInBytes)
+{
+  if (ApplyContextStates().Failed())
+  {
+    m_Statistics.m_uiFailedDrawcalls++;
+    return EZ_FAILURE;
+  }
+
+  return GetComputeCommandEncoder()->DispatchIndirect(hIndirectArgumentBuffer, uiArgumentOffsetInBytes);
 }
 
 ezResult ezRenderContext::ApplyContextStates(bool bForce)

@@ -30,30 +30,43 @@ protected:
   void UpdateSSRConstantBuffer() const;
   void UpdateBlurConstantBuffer() const;
 
-  float m_fRoughnessCutoff;
-  float m_fBlurStrength;
+  float m_fMaxDist;
+  float m_fResolution;
+  float m_fThickness;
+  int m_iSteps;
 
   ezRenderPipelineNodePassThrougPin m_PinSceneColor;
   ezRenderPipelineNodeInputPin m_PinInputDepth;
   ezRenderPipelineNodeInputPin m_PinInputMaterial;
   ezRenderPipelineNodeInputPin m_PinInputVelocity;
 
-  ezGALTextureHandle m_hDepthHierarchy;
-  ezGALTextureHandle m_hDepthHierarchy2;
-  ezGALTextureHandle m_hTextureSSR;
-  ezGALTextureHandle m_hTextureSSR2;
-  ezGALTextureHandle m_hTextureSSRBlur;
-  ezGALTextureHandle m_hTextureRoughness;
-  ezGALTextureHandle m_hTextureOutput;
-
-  ezTexture2DResourceHandle  m_hBlueNoiseTexture;
-
-  ezShaderResourceHandle m_hShaderDepthHierarchy;
-  ezShaderResourceHandle m_hSSRShader;
-  ezShaderResourceHandle m_hSSRAntiflicker;
-  ezShaderResourceHandle m_hSSRBlur;
-
   ezConstantBufferStorageHandle m_hSSRConstantBuffer;
-  ezConstantBufferStorageHandle m_hBlurConstantBuffer;
   ezConstantBufferStorageHandle m_hPostProcessConstantBuffer;
+  ezShaderResourceHandle m_hShaderTileMinMaxRoughnessHorizontal;
+  ezShaderResourceHandle m_hShaderTileMinMaxRoughnessVerticle;
+  ezShaderResourceHandle m_hShaderDepthHierarchy;
+  ezShaderResourceHandle m_hShaderSSRTrace;
+
+  ezGALTextureHandle m_hTextureTileMinMaxRoughnessHorizontal;
+  ezGALTextureHandle m_hTileMinMaxRoughness;
+  ezGALTextureHandle m_hDepthHierarchy;
+  ezGALTextureHandle m_hDepthHierarchyTmp;
+  ezGALTextureHandle m_hIndirectSpecular;
+  ezGALTextureHandle m_hDirectionPDF;
+  ezGALTextureHandle m_hRayLength;
+
+  ezTexture2DResourceHandle m_hBlueNoiseTexture;
+
+  ezGALBufferHandle m_hTileStatisticsBuffer;
+  ezArrayPtr<ezPostprocessTileStatistics> m_TileStatistics;
+
+  ezGALBufferHandle m_hTilesTracingEarlyexitBuffer;
+  ezGALBufferHandle m_hTilesTracingCheapBuffer;
+  ezGALBufferHandle m_hTilesTracingExpensiveBuffer;
+  ezArrayPtr<ezUInt32> m_TilesTracingEarlyexit;
+  ezArrayPtr<ezUInt32> m_TilesTracingCheap;
+  ezArrayPtr<ezUInt32> m_TilesTracingExpensive;
+
+  float m_MinMaxRoughnessWidth;
+  float m_MinMaxRoughnessHeight;
 };

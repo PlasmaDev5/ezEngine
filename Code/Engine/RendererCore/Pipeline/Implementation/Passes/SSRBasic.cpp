@@ -12,6 +12,8 @@
 #include "../../../../../../Data/Base/Shaders/Pipeline/SSR/SSRConstants.h"
 #include "../../../../../../Data/Base/Shaders/Pipeline/PostprocessConstants.h"
 
+#include <Foundation/IO/TypeVersionContext.h>
+
 // clang-format off
 EZ_BEGIN_DYNAMIC_REFLECTED_TYPE(ezSSRBasicPass, 1, ezRTTIDefaultAllocator<ezSSRBasicPass>)
 {

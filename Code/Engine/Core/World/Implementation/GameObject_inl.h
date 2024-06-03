@@ -254,7 +254,7 @@ EZ_ALWAYS_INLINE ezVec3 ezGameObject::GetGlobalScaling() const
 
 EZ_ALWAYS_INLINE void ezGameObject::SetGlobalTransform(const ezTransform& transform)
 {
-#if PL_ENABLED(PL_GAMEOBJECT_VELOCITY)
+#if EZ_ENABLED(EZ_GAMEOBJECT_VELOCITY)
   m_pTransformationData->m_lastGlobalTransform = m_pTransformationData->m_globalTransform;
 #endif
 

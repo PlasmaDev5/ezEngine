@@ -12,7 +12,7 @@ SHADING_QUALITY = SHADING_QUALITY_NORMAL
 #include <Shaders/Pipeline/SSR/SSRConstants.h>
 
 Texture2D<float2> TileMinMaxRoughnessHorizontal;
-globallycoherent RWStructuredBuffer<plPostprocessTileStatistics> TileTracingStatistics;
+globallycoherent RWStructuredBuffer<ezPostprocessTileStatistics> TileTracingStatistics;
 RWStructuredBuffer<uint> TilesTracingEarlyexit;
 RWStructuredBuffer<uint> TilesTracingCheap;
 RWStructuredBuffer<uint> TilesTracingExpensive;

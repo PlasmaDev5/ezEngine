@@ -109,7 +109,7 @@ void ezOffscreenRendererTest::Run()
     ezGraphicsTest::SetClipSpace();
 
     ezRenderContext::GetDefaultInstance()->BindShader(m_hScreenShader);
-    ezRenderContext::GetDefaultInstance()->BindMeshBuffer(ezGALBufferHandle(), ezGALBufferHandle(), nullptr, ezGALPrimitiveTopology::Triangles, 1);
+    ezRenderContext::GetDefaultInstance()->BindNullMeshBuffer(ezGALPrimitiveTopology::Triangles, 1);
     ezRenderContext::GetDefaultInstance()->DrawMeshBuffer().AssertSuccess();
 
     ezRenderContext::GetDefaultInstance()->EndRendering();

@@ -55,11 +55,10 @@ struct EZ_RENDERERCORE_DLL ezRenderContextFlags
     SamplerBindingChanged = EZ_BIT(3),
     BufferBindingChanged = EZ_BIT(4),
     ConstantBufferBindingChanged = EZ_BIT(5),
-    MeshBufferBindingChanged = EZ_BIT(6),
-    MaterialBindingChanged = EZ_BIT(7),
+    MaterialBindingChanged = EZ_BIT(6),
 
     AllStatesInvalid = ShaderStateChanged | TextureBindingChanged | UAVBindingChanged | SamplerBindingChanged | BufferBindingChanged |
-                       ConstantBufferBindingChanged | MeshBufferBindingChanged,
+                       ConstantBufferBindingChanged,
     Default = None
   };
 
@@ -71,7 +70,6 @@ struct EZ_RENDERERCORE_DLL ezRenderContextFlags
     StorageType SamplerBindingChanged : 1;
     StorageType BufferBindingChanged : 1;
     StorageType ConstantBufferBindingChanged : 1;
-    StorageType MeshBufferBindingChanged : 1;
     StorageType MaterialBindingChanged : 1;
   };
 };

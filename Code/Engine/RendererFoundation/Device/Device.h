@@ -120,9 +120,6 @@ public:
   ezResult UpdateSwapChain(ezGALSwapChainHandle hSwapChain, ezEnum<ezGALPresentMode> newPresentMode);
   void DestroySwapChain(ezGALSwapChainHandle hSwapChain);
 
-  ezGALVertexDeclarationHandle CreateVertexDeclaration(const ezGALVertexDeclarationCreationDescription& description);
-  void DestroyVertexDeclaration(ezGALVertexDeclarationHandle hVertexDeclaration);
-
   // GPU -> CPU query functions
 
   /// \brief Queries the result of a timestamp.
@@ -212,7 +209,6 @@ public:
   const ezGALDepthStencilState* GetDepthStencilState(ezGALDepthStencilStateHandle hDepthStencilState) const;
   const ezGALBlendState* GetBlendState(ezGALBlendStateHandle hBlendState) const;
   const ezGALRasterizerState* GetRasterizerState(ezGALRasterizerStateHandle hRasterizerState) const;
-  const ezGALVertexDeclaration* GetVertexDeclaration(ezGALVertexDeclarationHandle hVertexDeclaration) const;
   const ezGALSamplerState* GetSamplerState(ezGALSamplerStateHandle hSamplerState) const;
   const ezGALTextureResourceView* GetResourceView(ezGALTextureResourceViewHandle hResourceView) const;
   const ezGALBufferResourceView* GetResourceView(ezGALBufferResourceViewHandle hResourceView) const;
@@ -291,7 +287,6 @@ protected:
   using TextureUnorderedAccessViewTable = ezIdTable<ezGALTextureUnorderedAccessViewHandle::IdType, ezGALTextureUnorderedAccessView*, ezLocalAllocatorWrapper>;
   using BufferUnorderedAccessViewTable = ezIdTable<ezGALBufferUnorderedAccessViewHandle::IdType, ezGALBufferUnorderedAccessView*, ezLocalAllocatorWrapper>;
   using SwapChainTable = ezIdTable<ezGALSwapChainHandle::IdType, ezGALSwapChain*, ezLocalAllocatorWrapper>;
-  using VertexDeclarationTable = ezIdTable<ezGALVertexDeclarationHandle::IdType, ezGALVertexDeclaration*, ezLocalAllocatorWrapper>;
 
   ShaderTable m_Shaders;
   BlendStateTable m_BlendStates;
@@ -309,7 +304,6 @@ protected:
   TextureUnorderedAccessViewTable m_TextureUnorderedAccessViews;
   BufferUnorderedAccessViewTable m_BufferUnorderedAccessViews;
   SwapChainTable m_SwapChains;
-  VertexDeclarationTable m_VertexDeclarations;
 
 
   // Hash tables used to prevent state object duplication
@@ -317,7 +311,6 @@ protected:
   ezHashTable<ezUInt32, ezGALDepthStencilStateHandle, ezHashHelper<ezUInt32>, ezLocalAllocatorWrapper> m_DepthStencilStateTable;
   ezHashTable<ezUInt32, ezGALRasterizerStateHandle, ezHashHelper<ezUInt32>, ezLocalAllocatorWrapper> m_RasterizerStateTable;
   ezHashTable<ezUInt32, ezGALSamplerStateHandle, ezHashHelper<ezUInt32>, ezLocalAllocatorWrapper> m_SamplerStateTable;
-  ezHashTable<ezUInt32, ezGALVertexDeclarationHandle, ezHashHelper<ezUInt32>, ezLocalAllocatorWrapper> m_VertexDeclarationTable;
 
   struct DeadObject
   {
@@ -405,11 +398,6 @@ protected:
 
   virtual ezGALBufferUnorderedAccessView* CreateUnorderedAccessViewPlatform(ezGALBuffer* pResource, const ezGALBufferUnorderedAccessViewCreationDescription& Description) = 0;
   virtual void DestroyUnorderedAccessViewPlatform(ezGALBufferUnorderedAccessView* pUnorderedAccessView) = 0;
-
-  // Other rendering creation functions
-
-  virtual ezGALVertexDeclaration* CreateVertexDeclarationPlatform(const ezGALVertexDeclarationCreationDescription& Description) = 0;
-  virtual void DestroyVertexDeclarationPlatform(ezGALVertexDeclaration* pVertexDeclaration) = 0;
 
   // Resource update functions
 

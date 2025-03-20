@@ -57,11 +57,11 @@ void ezMeshViewContext::SetCamera(const ezViewRedrawMsgToEngine* pMsg)
 
     ezUInt32 uiNumVertices = bufferDesc.m_uiTotalSize / bufferDesc.m_uiStructSize;
     ezUInt32 uiNumTriangles = pMeshBuffer->GetPrimitiveCount();
-    ezBoundingBox bbox = ezBoundingBox::MakeFromMinMax(ezVec3(-1), ezVec3(1));
+    ezVec3 bboxExtents = ezVec3(2);
 
     if (pMeshBuffer->GetBounds().IsValid())
     {
-      bbox = pMeshBuffer->GetBounds().GetBox();
+      bboxExtents = pMeshBuffer->GetBounds().m_vBoxHalfExtents * 2.0f;
     }
 
     ezUInt32 uiNumUVs = 0;
@@ -84,8 +84,7 @@ void ezMeshViewContext::SetCamera(const ezViewRedrawMsgToEngine* pMsg)
     sText.AppendFormat("UV Channels: \t{}\t\n", uiNumUVs);
     sText.AppendFormat("Color Channels: \t{}\t\n", uiNumColors);
     sText.AppendFormat("Bytes Per Vertex: \t{}\t\n", bufferDesc.m_uiStructSize);
-    sText.AppendFormat("Bounding Box: \twidth={0}, depth={1}, height={2}\t", ezArgF(bbox.GetHalfExtents().x * 2, 2),
-      ezArgF(bbox.GetHalfExtents().y * 2, 2), ezArgF(bbox.GetHalfExtents().z * 2, 2));
+    sText.AppendFormat("Bounding Box: \twidth={0}, depth={1}, height={2}\t", ezArgF(bboxExtents.x, 2), ezArgF(bboxExtents.y, 2), ezArgF(bboxExtents.z, 2));
 
     ezDebugRenderer::DrawInfoText(m_hView, ezDebugTextPlacement::BottomLeft, "AssetStats", sText);
   }

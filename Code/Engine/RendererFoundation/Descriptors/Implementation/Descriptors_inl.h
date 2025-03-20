@@ -36,10 +36,31 @@ inline void ezGALTextureCreationDescription::SetAsRenderTarget(ezUInt32 uiWidth,
   m_pExisitingNativeObject = nullptr;
 }
 
+//////////////////////////////////////////////////////////////////////////
+
 EZ_FORCE_INLINE ezGALVertexAttribute::ezGALVertexAttribute(ezGALVertexAttributeSemantic::Enum semantic, ezGALResourceFormat::Enum format, ezUInt16 uiOffset, ezUInt8 uiVertexBufferSlot)
-  : m_eSemantic(semantic)
-  , m_eFormat(format)
+  : m_Semantic(semantic)
+  , m_Format(format)
   , m_uiOffset(uiOffset)
   , m_uiVertexBufferSlot(uiVertexBufferSlot)
 {
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+inline void ezGALVertexAttributeDescription::Clear()
+{
+  m_Attributes.Clear();
+  m_Attributes.GetUserData<ezUInt32>() = 0;
+}
+
+inline void ezGALVertexAttributeDescription::ComputeHash()
+{
+  ezUInt32 uiHash = 0;
+  for (auto& attribute : m_Attributes)
+  {
+    uiHash = ezHashingUtils::xxHash32(&attribute, sizeof(attribute), uiHash);
+  }
+
+  m_Attributes.GetUserData<ezUInt32>() = uiHash;
 }

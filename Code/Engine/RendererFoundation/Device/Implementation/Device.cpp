@@ -14,7 +14,6 @@
 #include <RendererFoundation/Resources/RenderTargetView.h>
 #include <RendererFoundation/Resources/ResourceView.h>
 #include <RendererFoundation/Resources/UnorderedAccesView.h>
-#include <RendererFoundation/Shader/VertexDeclaration.h>
 #include <RendererFoundation/State/State.h>
 
 namespace
@@ -39,7 +38,6 @@ namespace
       TextureUnorderedAccessView,
       BufferUnorderedAccessView,
       SwapChain,
-      VertexDeclaration
     };
   };
 
@@ -56,7 +54,6 @@ namespace
   static_assert(sizeof(ezGALTextureUnorderedAccessViewHandle) == sizeof(ezUInt32));
   static_assert(sizeof(ezGALBufferUnorderedAccessViewHandle) == sizeof(ezUInt32));
   static_assert(sizeof(ezGALSwapChainHandle) == sizeof(ezUInt32));
-  static_assert(sizeof(ezGALVertexDeclarationHandle) == sizeof(ezUInt32));
 } // namespace
 
 ezGALDevice* ezGALDevice::s_pDefaultDevice = nullptr;
@@ -110,9 +107,6 @@ ezGALDevice::~ezGALDevice()
 
     if (!m_SwapChains.IsEmpty())
       ezLog::Warning("{0} swap chains have not been cleaned up", m_SwapChains.GetCount());
-
-    if (!m_VertexDeclarations.IsEmpty())
-      ezLog::Warning("{0} vertex declarations have not been cleaned up", m_VertexDeclarations.GetCount());
   }
 }
 
@@ -1471,66 +1465,6 @@ void ezGALDevice::DestroySwapChain(ezGALSwapChainHandle hSwapChain)
   }
 }
 
-ezGALVertexDeclarationHandle ezGALDevice::CreateVertexDeclaration(const ezGALVertexDeclarationCreationDescription& desc)
-{
-  EZ_GALDEVICE_LOCK_AND_CHECK();
-
-  /// \todo Platform independent validation
-
-  // Hash desc and return potential existing one (including inc. refcount)
-  ezUInt32 uiHash = desc.CalculateHash();
-
-  {
-    ezGALVertexDeclarationHandle hVertexDeclaration;
-    if (m_VertexDeclarationTable.TryGetValue(uiHash, hVertexDeclaration))
-    {
-      ezGALVertexDeclaration* pVertexDeclaration = m_VertexDeclarations[hVertexDeclaration];
-      if (pVertexDeclaration->GetRefCount() == 0)
-      {
-        ReviveDeadObject(GALObjectType::VertexDeclaration, hVertexDeclaration);
-      }
-
-      pVertexDeclaration->AddRef();
-      return hVertexDeclaration;
-    }
-  }
-
-  ezGALVertexDeclaration* pVertexDeclaration = CreateVertexDeclarationPlatform(desc);
-
-  if (pVertexDeclaration != nullptr)
-  {
-    pVertexDeclaration->AddRef();
-
-    ezGALVertexDeclarationHandle hVertexDeclaration(m_VertexDeclarations.Insert(pVertexDeclaration));
-    m_VertexDeclarationTable.Insert(uiHash, hVertexDeclaration);
-
-    return hVertexDeclaration;
-  }
-
-  return ezGALVertexDeclarationHandle();
-}
-
-void ezGALDevice::DestroyVertexDeclaration(ezGALVertexDeclarationHandle hVertexDeclaration)
-{
-  EZ_GALDEVICE_LOCK_AND_CHECK();
-
-  ezGALVertexDeclaration* pVertexDeclaration = nullptr;
-
-  if (m_VertexDeclarations.TryGetValue(hVertexDeclaration, pVertexDeclaration))
-  {
-    pVertexDeclaration->ReleaseRef();
-
-    if (pVertexDeclaration->GetRefCount() == 0)
-    {
-      AddDeadObject(GALObjectType::VertexDeclaration, hVertexDeclaration);
-    }
-  }
-  else
-  {
-    ezLog::Warning("DestroyVertexDeclaration called on invalid handle (double free?)");
-  }
-}
-
 ezEnum<ezGALAsyncResult> ezGALDevice::GetFenceResult(ezGALFenceHandle hFence, ezTime timeout)
 {
   if (hFence == 0)
@@ -1989,18 +1923,6 @@ void ezGALDevice::DestroyDeadObjects()
           pSwapChain->DeInitPlatform(this).IgnoreResult();
           EZ_DELETE(&m_Allocator, pSwapChain);
         }
-
-        break;
-      }
-      case GALObjectType::VertexDeclaration:
-      {
-        ezGALVertexDeclarationHandle hVertexDeclaration(ezGAL::ez18_14Id(deadObject.m_uiHandle));
-        ezGALVertexDeclaration* pVertexDeclaration = nullptr;
-
-        EZ_VERIFY(m_VertexDeclarations.Remove(hVertexDeclaration, &pVertexDeclaration), "Unexpected invalid handle");
-        m_VertexDeclarationTable.Remove(pVertexDeclaration->GetDescription().CalculateHash());
-
-        DestroyVertexDeclarationPlatform(pVertexDeclaration);
 
         break;
       }

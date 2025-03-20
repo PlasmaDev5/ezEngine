@@ -113,7 +113,7 @@ ezResult ezMeshResourceDescriptor::Save(const char* szFile)
 
 void ezMeshResourceDescriptor::Save(ezStreamWriter& inout_stream)
 {
-  ezUInt8 uiVersion = 7;
+  ezUInt8 uiVersion = 8;
   inout_stream << uiVersion;
 
   ezUInt8 uiCompressionMode = 0;
@@ -180,19 +180,18 @@ void ezMeshResourceDescriptor::Save(ezStreamWriter& inout_stream)
     chunk << (m_MeshBufferDescriptor.HasIndexBuffer() && m_MeshBufferDescriptor.Uses32BitIndices());
 
     // Number of vertex streams
-    chunk << m_MeshBufferDescriptor.GetVertexDeclaration().m_VertexStreams.GetCount();
+    chunk << m_MeshBufferDescriptor.GetVertexAttributeDesc().m_Attributes.GetCount();
 
     // Version 3: Topology
     chunk << (ezUInt8)m_MeshBufferDescriptor.GetTopology();
 
-    for (ezUInt32 idx = 0; idx < m_MeshBufferDescriptor.GetVertexDeclaration().m_VertexStreams.GetCount(); ++idx)
+    for (ezUInt32 idx = 0; idx < m_MeshBufferDescriptor.GetVertexAttributeDesc().m_Attributes.GetCount(); ++idx)
     {
-      const auto& vs = m_MeshBufferDescriptor.GetVertexDeclaration().m_VertexStreams[idx];
+      const auto& vs = m_MeshBufferDescriptor.GetVertexAttributeDesc().m_Attributes[idx];
 
       chunk << idx;                // Vertex stream index
       chunk << (ezInt32)vs.m_Format;
       chunk << (ezInt32)vs.m_Semantic;
-      chunk << vs.m_uiElementSize; // not needed, but can be used to check that memory layout has not changed
       chunk << vs.m_uiOffset;      // not needed, but can be used to check that memory layout has not changed
     }
 
@@ -428,7 +427,10 @@ ezResult ezMeshResourceDescriptor::Load(ezStreamReader& inout_stream)
 
         chunk >> iFormat;
         chunk >> iSemantic;
-        chunk >> uiElementSize; // not needed, but can be used to check that memory layout has not changed
+        if (uiVersion < 8) // has been removed in version 8
+        {
+          chunk >> uiElementSize;
+        }
         chunk >> uiOffset;      // not needed, but can be used to check that memory layout has not changed
 
         if (uiVersion < 7)

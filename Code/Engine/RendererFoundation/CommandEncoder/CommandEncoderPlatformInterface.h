@@ -8,6 +8,7 @@
 
 struct ezShaderResourceBinding;
 struct ezGALRenderingSetup;
+struct ezGALVertexAttributeDescription;
 
 class EZ_RENDERERFOUNDATION_DLL ezGALCommandEncoderCommonPlatformInterface
 {
@@ -90,9 +91,9 @@ public:
 
   // State functions
 
-  virtual void SetIndexBufferPlatform(const ezGALBuffer* pIndexBuffer) = 0;
-  virtual void SetVertexBufferPlatform(ezUInt32 uiSlot, const ezGALBuffer* pVertexBuffer) = 0;
-  virtual void SetVertexDeclarationPlatform(const ezGALVertexDeclaration* pVertexDeclaration) = 0;
+  virtual void SetIndexBufferPlatform(const ezGALBuffer* pIndexBuffer, ezUInt32 uiOffsetInBytes) = 0;
+  virtual void SetVertexBufferPlatform(ezUInt32 uiSlot, const ezGALBuffer* pVertexBuffer, ezUInt32 uiOffsetInBytes, ezGALVertexBufferStepMode::Enum stepMode) = 0;
+  virtual void SetVertexAttributeDescriptionPlatform(const ezGALVertexAttributeDescription& vertexAttributeDesc) = 0;
   virtual void SetPrimitiveTopologyPlatform(ezGALPrimitiveTopology::Enum topology) = 0;
 
   virtual void SetBlendStatePlatform(const ezGALBlendState* pBlendState, const ezColor& blendFactor, ezUInt32 uiSampleMask) = 0;

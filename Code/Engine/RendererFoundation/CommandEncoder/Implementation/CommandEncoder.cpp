@@ -613,36 +613,38 @@ ezResult ezGALCommandEncoder::DrawInstancedIndirect(ezGALBufferHandle hIndirectA
   return m_CommonImpl.DrawInstancedIndirectPlatform(pBuffer, uiArgumentOffsetInBytes);
 }
 
-void ezGALCommandEncoder::SetIndexBuffer(ezGALBufferHandle hIndexBuffer)
+void ezGALCommandEncoder::SetIndexBuffer(ezGALBufferHandle hIndexBuffer, ezUInt32 uiOffsetInBytes /*= 0*/)
 {
-  if (m_State.m_hIndexBuffer == hIndexBuffer)
+  if (m_State.m_IndexBufferBinding.m_hBuffer == hIndexBuffer && m_State.m_IndexBufferBinding.m_uiOffsetInBytes == uiOffsetInBytes)
   {
     return;
   }
 
   const ezGALBuffer* pBuffer = GetDevice().GetBuffer(hIndexBuffer);
-  /// \todo Assert on index buffer type (if non nullptr)
-  // Note that GL4 can bind arbitrary buffer to arbitrary binding points (index/vertex/transform-feedback/indirect-draw/...)
+  
+  m_CommonImpl.SetIndexBufferPlatform(pBuffer, uiOffsetInBytes);
 
-  m_CommonImpl.SetIndexBufferPlatform(pBuffer);
-
-  m_State.m_hIndexBuffer = hIndexBuffer;
+  m_State.m_IndexBufferBinding.m_hBuffer = hIndexBuffer;
+  m_State.m_IndexBufferBinding.m_uiOffsetInBytes = uiOffsetInBytes;
 }
 
-void ezGALCommandEncoder::SetVertexBuffer(ezUInt32 uiSlot, ezGALBufferHandle hVertexBuffer)
+void ezGALCommandEncoder::SetVertexBuffer(ezUInt32 uiSlot, ezGALBufferHandle hVertexBuffer, ezUInt32 uiOffsetInBytes /*= 0*/, ezGALVertexBufferStepMode::Enum stepMode /*= ezGALVertexBufferStepMode::PerVertex*/)
 {
-  if (m_State.m_hVertexBuffers[uiSlot] == hVertexBuffer)
+  EZ_ASSERT_DEBUG(uiSlot < EZ_GAL_MAX_VERTEX_BUFFER_COUNT, "Invalid vertex buffer slot");
+
+  auto& vertexBufferBinding = m_State.m_VertexBufferBindings[uiSlot];
+  if (vertexBufferBinding.m_hBuffer == hVertexBuffer && vertexBufferBinding.m_uiOffsetInBytes == uiOffsetInBytes && vertexBufferBinding.m_StepMode == stepMode)
   {
     return;
   }
 
   const ezGALBuffer* pBuffer = GetDevice().GetBuffer(hVertexBuffer);
-  // Assert on vertex buffer type (if non-zero)
-  // Note that GL4 can bind arbitrary buffer to arbitrary binding points (index/vertex/transform-feedback/indirect-draw/...)
 
-  m_CommonImpl.SetVertexBufferPlatform(uiSlot, pBuffer);
+  m_CommonImpl.SetVertexBufferPlatform(uiSlot, pBuffer, uiOffsetInBytes, stepMode);
 
-  m_State.m_hVertexBuffers[uiSlot] = hVertexBuffer;
+  vertexBufferBinding.m_hBuffer = hVertexBuffer;
+  vertexBufferBinding.m_uiOffsetInBytes = uiOffsetInBytes;
+  vertexBufferBinding.m_StepMode = stepMode;
 }
 
 void ezGALCommandEncoder::SetPrimitiveTopology(ezGALPrimitiveTopology::Enum topology)
@@ -659,21 +661,11 @@ void ezGALCommandEncoder::SetPrimitiveTopology(ezGALPrimitiveTopology::Enum topo
   m_State.m_Topology = topology;
 }
 
-void ezGALCommandEncoder::SetVertexDeclaration(ezGALVertexDeclarationHandle hVertexDeclaration)
+void ezGALCommandEncoder::SetVertexAttributeDescription(const ezGALVertexAttributeDescription& desc)
 {
   AssertRenderingThread();
 
-  if (m_State.m_hVertexDeclaration == hVertexDeclaration)
-  {
-    return;
-  }
-
-  const ezGALVertexDeclaration* pVertexDeclaration = GetDevice().GetVertexDeclaration(hVertexDeclaration);
-  // Assert on vertex buffer type (if non-zero)
-
-  m_CommonImpl.SetVertexDeclarationPlatform(pVertexDeclaration);
-
-  m_State.m_hVertexDeclaration = hVertexDeclaration;
+  m_CommonImpl.SetVertexAttributeDescriptionPlatform(desc);
 }
 
 void ezGALCommandEncoder::SetBlendState(ezGALBlendStateHandle hBlendState, const ezColor& blendFactor, ezUInt32 uiSampleMask)

@@ -87,7 +87,7 @@ void ezBlendPass::Execute(const ezRenderViewContext& renderViewContext, const ez
 
     // Bind shader and inputs
     renderViewContext.m_pRenderContext->BindShader(m_hShader);
-    renderViewContext.m_pRenderContext->BindMeshBuffer(ezGALBufferHandle(), ezGALBufferHandle(), nullptr, ezGALPrimitiveTopology::Triangles, 1);
+    renderViewContext.m_pRenderContext->BindNullMeshBuffer(ezGALPrimitiveTopology::Triangles, 1);
     renderViewContext.m_pRenderContext->BindTexture2D("InputA", hResourceViewA);
     renderViewContext.m_pRenderContext->BindTexture2D("InputB", hResourceViewB);
 

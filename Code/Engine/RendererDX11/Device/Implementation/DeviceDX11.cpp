@@ -19,7 +19,6 @@
 #include <RendererDX11/Resources/TextureDX11.h>
 #include <RendererDX11/Resources/UnorderedAccessViewDX11.h>
 #include <RendererDX11/Shader/ShaderDX11.h>
-#include <RendererDX11/Shader/VertexDeclarationDX11.h>
 #include <RendererDX11/State/StateDX11.h>
 #include <RendererFoundation/CommandEncoder/CommandEncoder.h>
 #include <RendererFoundation/Device/DeviceFactory.h>
@@ -668,29 +667,7 @@ void ezGALDeviceDX11::DestroyUnorderedAccessViewPlatform(ezGALBufferUnorderedAcc
   EZ_DELETE(&m_Allocator, pUnorderedAccessViewDX11);
 }
 
-// Other rendering creation functions
-
-ezGALVertexDeclaration* ezGALDeviceDX11::CreateVertexDeclarationPlatform(const ezGALVertexDeclarationCreationDescription& Description)
-{
-  ezGALVertexDeclarationDX11* pVertexDeclaration = EZ_NEW(&m_Allocator, ezGALVertexDeclarationDX11, Description);
-
-  if (pVertexDeclaration->InitPlatform(this).Succeeded())
-  {
-    return pVertexDeclaration;
-  }
-  else
-  {
-    EZ_DELETE(&m_Allocator, pVertexDeclaration);
-    return nullptr;
-  }
-}
-
-void ezGALDeviceDX11::DestroyVertexDeclarationPlatform(ezGALVertexDeclaration* pVertexDeclaration)
-{
-  ezGALVertexDeclarationDX11* pVertexDeclarationDX11 = static_cast<ezGALVertexDeclarationDX11*>(pVertexDeclaration);
-  pVertexDeclarationDX11->DeInitPlatform(this).IgnoreResult();
-  EZ_DELETE(&m_Allocator, pVertexDeclarationDX11);
-}
+// Resource update functions
 
 void ezGALDeviceDX11::UpdateBufferForNextFramePlatform(const ezGALBuffer* pBuffer, ezConstByteArrayPtr sourceData, ezUInt32 uiDestOffset)
 {

@@ -1,9 +1,11 @@
 
 #pragma once
 
-#include <Foundation/Types/Bitflags.h>
 #include <RendererDX11/RendererDX11DLL.h>
+
+#include <Foundation/Types/Bitflags.h>
 #include <RendererFoundation/CommandEncoder/CommandEncoderPlatformInterface.h>
+#include <RendererFoundation/Descriptors/Descriptors.h>
 #include <RendererFoundation/Resources/RenderTargetSetup.h>
 
 struct ID3D11DeviceChild;
@@ -16,8 +18,11 @@ struct ID3D11ShaderResourceView;
 struct ID3D11UnorderedAccessView;
 struct ID3D11SamplerState;
 struct ID3D11Query;
+struct ID3D11VertexShader;
+struct ID3D11InputLayout;
 
 class ezGALDeviceDX11;
+class ezGALShaderByteCode;
 
 class EZ_RENDERERDX11_DLL ezGALCommandEncoderImplDX11 final : public ezGALCommandEncoderCommonPlatformInterface
 {
@@ -110,9 +115,9 @@ public:
 
   // State functions
 
-  virtual void SetIndexBufferPlatform(const ezGALBuffer* pIndexBuffer) override;
-  virtual void SetVertexBufferPlatform(ezUInt32 uiSlot, const ezGALBuffer* pVertexBuffer) override;
-  virtual void SetVertexDeclarationPlatform(const ezGALVertexDeclaration* pVertexDeclaration) override;
+  virtual void SetIndexBufferPlatform(const ezGALBuffer* pIndexBuffer, ezUInt32 uiOffsetInBytes) override;
+  virtual void SetVertexBufferPlatform(ezUInt32 uiSlot, const ezGALBuffer* pVertexBuffer, ezUInt32 uiOffsetInBytes, ezGALVertexBufferStepMode::Enum stepMode) override;
+  virtual void SetVertexAttributeDescriptionPlatform(const ezGALVertexAttributeDescription& vertexAttributeDesc) override;
   virtual void SetPrimitiveTopologyPlatform(ezGALPrimitiveTopology::Enum topology) override;
 
   virtual void SetBlendStatePlatform(const ezGALBlendState* pBlendState, const ezColor& blendFactor, ezUInt32 uiSampleMask) override;
@@ -127,6 +132,8 @@ private:
 
   bool UnsetResourceViews(const ezGALResourceBase* pResource);
   bool UnsetUnorderedAccessViews(const ezGALResourceBase* pResource);
+  ID3D11InputLayout* GetOrCreateInputLayout();
+
   ezResult FlushDeferredStateChanges();
 
   ezGALDeviceDX11& m_GALDeviceDX11;
@@ -153,6 +160,7 @@ private:
   ezGAL::ModifiedRange m_BoundSamplerStatesRange[ezGALShaderStage::ENUM_COUNT];
 
   ID3D11DeviceChild* m_pBoundShaders[ezGALShaderStage::ENUM_COUNT] = {};
+  ezSharedPtr<const ezGALShaderByteCode> m_pVertexShaderByteCode;
 
   ezGALRenderTargetSetup m_RenderTargetSetup;
   ID3D11RenderTargetView* m_pBoundRenderTargets[EZ_GAL_MAX_RENDERTARGET_COUNT] = {};
@@ -164,6 +172,31 @@ private:
 
   ezUInt32 m_VertexBufferStrides[EZ_GAL_MAX_VERTEX_BUFFER_COUNT] = {};
   ezUInt32 m_VertexBufferOffsets[EZ_GAL_MAX_VERTEX_BUFFER_COUNT] = {};
+  ezUInt32 m_VertexBufferStepModes[EZ_GAL_MAX_VERTEX_BUFFER_COUNT] = {};
+
+  ezGALVertexAttributeDescription m_VertexAttributeDesc;
+  bool m_bVertexAttributeDescModified = false;
+
+  struct InputLayoutKey
+  {
+    ID3D11VertexShader* m_pVertexShader = nullptr;
+    ezUInt32 m_uiVertexAttributesHash = 0;
+
+    bool operator==(const InputLayoutKey& rhs) const
+    {
+      return m_pVertexShader == rhs.m_pVertexShader && m_uiVertexAttributesHash == rhs.m_uiVertexAttributesHash;
+    }
+
+    bool operator<(const InputLayoutKey& rhs) const
+    {
+      if (m_pVertexShader != rhs.m_pVertexShader)
+        return m_pVertexShader < rhs.m_pVertexShader;
+
+      return m_uiVertexAttributesHash < rhs.m_uiVertexAttributesHash;
+    }
+  };
+
+  ezMap<InputLayoutKey, ID3D11InputLayout*> m_InputLayouts;
 
   ezHashSet<const ezGALBuffer*> m_AlreadyUpdatedTransientBuffers;
 

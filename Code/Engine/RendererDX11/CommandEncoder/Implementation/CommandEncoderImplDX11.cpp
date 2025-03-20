@@ -13,7 +13,6 @@
 #include <RendererDX11/Resources/TextureDX11.h>
 #include <RendererDX11/Resources/UnorderedAccessViewDX11.h>
 #include <RendererDX11/Shader/ShaderDX11.h>
-#include <RendererDX11/Shader/VertexDeclarationDX11.h>
 #include <RendererDX11/State/StateDX11.h>
 #include <RendererFoundation/CommandEncoder/CommandEncoder.h>
 
@@ -33,6 +32,11 @@ ezGALCommandEncoderImplDX11::ezGALCommandEncoderImplDX11(ezGALDeviceDX11& ref_de
 ezGALCommandEncoderImplDX11::~ezGALCommandEncoderImplDX11()
 {
   EZ_GAL_DX11_RELEASE(m_pDXAnnotation);
+
+  for (auto it : m_InputLayouts)
+  {
+    EZ_GAL_DX11_RELEASE(it.Value());
+  }
 }
 
 
@@ -69,6 +73,8 @@ void ezGALCommandEncoderImplDX11::SetShaderPlatform(const ezGALShader* pShader)
   {
     m_pDXContext->VSSetShader(pVS, nullptr, 0);
     m_pBoundShaders[ezGALShaderStage::VertexShader] = pVS;
+
+    m_pVertexShaderByteCode = pShader->GetDescription().m_ByteCodes[ezGALShaderStage::VertexShader];
   }
 
   if (pHS != m_pBoundShaders[ezGALShaderStage::HullShader])
@@ -675,12 +681,12 @@ ezResult ezGALCommandEncoderImplDX11::DrawInstancedIndirectPlatform(const ezGALB
   return EZ_SUCCESS;
 }
 
-void ezGALCommandEncoderImplDX11::SetIndexBufferPlatform(const ezGALBuffer* pIndexBuffer)
+void ezGALCommandEncoderImplDX11::SetIndexBufferPlatform(const ezGALBuffer* pIndexBuffer, ezUInt32 uiOffsetInBytes)
 {
   if (pIndexBuffer != nullptr)
   {
     const ezGALBufferDX11* pDX11Buffer = static_cast<const ezGALBufferDX11*>(pIndexBuffer);
-    m_pDXContext->IASetIndexBuffer(pDX11Buffer->GetDXBuffer(), pDX11Buffer->GetIndexFormat(), 0 /* \todo: Expose */);
+    m_pDXContext->IASetIndexBuffer(pDX11Buffer->GetDXBuffer(), pDX11Buffer->GetIndexFormat(), uiOffsetInBytes);
   }
   else
   {
@@ -688,19 +694,26 @@ void ezGALCommandEncoderImplDX11::SetIndexBufferPlatform(const ezGALBuffer* pInd
   }
 }
 
-void ezGALCommandEncoderImplDX11::SetVertexBufferPlatform(ezUInt32 uiSlot, const ezGALBuffer* pVertexBuffer)
+void ezGALCommandEncoderImplDX11::SetVertexBufferPlatform(ezUInt32 uiSlot, const ezGALBuffer* pVertexBuffer, ezUInt32 uiOffsetInBytes, ezGALVertexBufferStepMode::Enum stepMode)
 {
   EZ_ASSERT_DEV(uiSlot < EZ_GAL_MAX_VERTEX_BUFFER_COUNT, "Invalid slot index");
 
   m_pBoundVertexBuffers[uiSlot] = pVertexBuffer != nullptr ? static_cast<const ezGALBufferDX11*>(pVertexBuffer)->GetDXBuffer() : nullptr;
   m_VertexBufferStrides[uiSlot] = pVertexBuffer != nullptr ? pVertexBuffer->GetDescription().m_uiStructSize : 0;
+  m_VertexBufferOffsets[uiSlot] = uiOffsetInBytes;
+  m_VertexBufferStepModes[uiSlot] = stepMode;
   m_BoundVertexBuffersRange.SetToIncludeValue(uiSlot);
 }
 
-void ezGALCommandEncoderImplDX11::SetVertexDeclarationPlatform(const ezGALVertexDeclaration* pVertexDeclaration)
+void ezGALCommandEncoderImplDX11::SetVertexAttributeDescriptionPlatform(const ezGALVertexAttributeDescription& vertexAttributeDesc)
 {
-  m_pDXContext->IASetInputLayout(
-    pVertexDeclaration != nullptr ? static_cast<const ezGALVertexDeclarationDX11*>(pVertexDeclaration)->GetDXInputLayout() : nullptr);
+  if (m_VertexAttributeDesc.GetHash() == vertexAttributeDesc.GetHash())
+  {
+    return;
+  }
+
+  m_VertexAttributeDesc = vertexAttributeDesc;
+  m_bVertexAttributeDescModified = true;
 }
 
 static const D3D11_PRIMITIVE_TOPOLOGY GALTopologyToDX11[] = {
@@ -887,6 +900,26 @@ ezResult ezGALCommandEncoderImplDX11::FlushDeferredStateChanges()
     m_BoundVertexBuffersRange.Reset();
   }
 
+  if (m_bVertexAttributeDescModified)
+  {
+    if (m_VertexAttributeDesc.IsValid())
+    {
+      auto pInputLayout = GetOrCreateInputLayout();
+      if (pInputLayout == nullptr)
+      {
+        return EZ_FAILURE;
+      }
+
+      m_pDXContext->IASetInputLayout(pInputLayout);
+    }
+    else
+    {
+      m_pDXContext->IASetInputLayout(nullptr);
+    }
+
+    m_bVertexAttributeDescModified = false;
+  }
+
   for (ezUInt32 stage = 0; stage < ezGALShaderStage::ENUM_COUNT; ++stage)
   {
     if (m_pBoundShaders[stage] != nullptr && m_BoundConstantBuffersRange[stage].IsValid())
@@ -959,6 +992,7 @@ bool ezGALCommandEncoderImplDX11::UnsetUnorderedAccessViews(const ezGALResourceB
 
   return bResult;
 }
+
 bool ezGALCommandEncoderImplDX11::UnsetResourceViews(const ezGALResourceBase* pResource)
 {
   EZ_ASSERT_DEV(pResource->GetParentResource() == pResource, "No proxies allowed");
@@ -980,4 +1014,84 @@ bool ezGALCommandEncoderImplDX11::UnsetResourceViews(const ezGALResourceBase* pR
   }
 
   return bResult;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+static const char* GALSemanticToDX11[] = {"POSITION", "NORMAL", "TANGENT", "COLOR", "COLOR", "COLOR", "COLOR", "COLOR", "COLOR", "COLOR", "COLOR",
+  "TEXCOORD", "TEXCOORD", "TEXCOORD", "TEXCOORD", "TEXCOORD", "TEXCOORD", "TEXCOORD", "TEXCOORD", "TEXCOORD", "TEXCOORD", "BITANGENT", "BONEINDICES",
+  "BONEINDICES", "BONEWEIGHTS", "BONEWEIGHTS"};
+
+static UINT GALSemanticToIndexDX11[] = {0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 1, 0, 1};
+
+static_assert(EZ_ARRAY_SIZE(GALSemanticToDX11) == ezGALVertexAttributeSemantic::ENUM_COUNT, "GALSemanticToDX11 array size does not match vertex attribute semantic count");
+static_assert(EZ_ARRAY_SIZE(GALSemanticToIndexDX11) == ezGALVertexAttributeSemantic::ENUM_COUNT, "GALSemanticToIndexDX11 array size does not match vertex attribute semantic count");
+
+EZ_DEFINE_AS_POD_TYPE(D3D11_INPUT_ELEMENT_DESC);
+
+ID3D11InputLayout* ezGALCommandEncoderImplDX11::GetOrCreateInputLayout()
+{
+  if (m_pBoundShaders[ezGALShaderStage::VertexShader] == nullptr || m_pVertexShaderByteCode == nullptr)
+  {
+    return nullptr;
+  }
+
+  InputLayoutKey key;
+  key.m_pVertexShader = static_cast<ID3D11VertexShader*>(m_pBoundShaders[ezGALShaderStage::VertexShader]);
+  key.m_uiVertexAttributesHash = m_VertexAttributeDesc.GetHash();
+
+  auto it = m_InputLayouts.Find(key);
+  if (it.IsValid() == false)
+  {
+    ezHybridArray<D3D11_INPUT_ELEMENT_DESC, 32> dxInputElementDescs;
+
+    for (auto& vertexAttribute : m_VertexAttributeDesc.m_Attributes)
+    {
+      D3D11_INPUT_ELEMENT_DESC& dxDesc = dxInputElementDescs.ExpandAndGetRef();
+
+      dxDesc.SemanticName = GALSemanticToDX11[vertexAttribute.m_Semantic];
+      dxDesc.SemanticIndex = GALSemanticToIndexDX11[vertexAttribute.m_Semantic];
+
+      dxDesc.Format = m_GALDeviceDX11.GetFormatLookupTable().GetFormatInfo(vertexAttribute.m_Format).m_eVertexAttributeType;
+      if (dxDesc.Format == DXGI_FORMAT_UNKNOWN)
+      {
+        ezLog::Error("DX11: Vertex attribute format {} of attribute '{}{}' is unknown!", vertexAttribute.m_Format, dxDesc.SemanticName, dxDesc.SemanticIndex);
+        return nullptr;
+      }
+
+      dxDesc.InputSlot = vertexAttribute.m_uiVertexBufferSlot;
+      dxDesc.AlignedByteOffset = vertexAttribute.m_uiOffset;
+
+      auto stepMode = m_VertexBufferStepModes[vertexAttribute.m_uiVertexBufferSlot];
+      dxDesc.InputSlotClass = (stepMode == ezGALVertexBufferStepMode::PerVertex) ? D3D11_INPUT_PER_VERTEX_DATA : D3D11_INPUT_PER_INSTANCE_DATA;
+      dxDesc.InstanceDataStepRate = (stepMode == ezGALVertexBufferStepMode::PerVertex) ? 0 : 1;
+    }
+
+    ID3D11InputLayout* pDXInputLayout = nullptr;
+    if (FAILED(m_GALDeviceDX11.GetDXDevice()->CreateInputLayout(
+          &dxInputElementDescs[0], dxInputElementDescs.GetCount(), m_pVertexShaderByteCode->GetByteCode(), m_pVertexShaderByteCode->GetSize(), &pDXInputLayout)))
+    {
+      /* This can happen when the resource system gives you a fallback resource, which then selects a shader that
+      does not fit the mesh layout.
+      E.g. when a material is not yet loaded and the fallback material is used, that fallback material may
+      use another shader, that requires more data streams, than what the mesh provides.
+      This problem will go away, once the proper material is loaded.
+
+      This can be fixed by ensuring that the fallback material uses a shader that only requires data that is
+      always there, e.g. only position and maybe a texcoord, and of course all meshes must provide at least those
+      data streams.
+
+      Otherwise, this is harmless, the high level renderer will ignore invalid drawcalls and once all the correct stuff is
+      available, it will work.
+      */
+
+      ezLog::Warning("DX11: Failed to create input layout!");
+      return nullptr;
+    }
+
+    m_InputLayouts.Insert(key, pDXInputLayout);
+    return pDXInputLayout;
+  }
+
+  return it.Value();
 }

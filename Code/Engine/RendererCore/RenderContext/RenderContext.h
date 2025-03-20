@@ -178,12 +178,41 @@ public:
   /// This function has no effect until the next draw or dispatch call on the context.
   void BindShader(const ezShaderResourceHandle& hShader, ezBitflags<ezShaderBindFlags> flags = ezShaderBindFlags::Default);
 
-  void BindMeshBuffer(const ezDynamicMeshBufferResourceHandle& hDynamicMeshBuffer);
   void BindMeshBuffer(const ezMeshBufferResourceHandle& hMeshBuffer);
-  void BindMeshBuffer(ezGALBufferHandle hVertexBuffer, ezGALBufferHandle hIndexBuffer, const ezVertexDeclarationInfo* pVertexDeclarationInfo, ezGALPrimitiveTopology::Enum topology, ezUInt32 uiPrimitiveCount, ezGALBufferHandle hVertexBuffer2 = {}, ezGALBufferHandle hVertexBuffer3 = {}, ezGALBufferHandle hVertexBuffer4 = {});
+  void BindMeshBuffer(const ezDynamicMeshBufferResourceHandle& hDynamicMeshBuffer);
+
+  struct MeshBufferBinding
+  {
+    ezGALPrimitiveTopology::Enum m_Topology = ezGALPrimitiveTopology::Triangles;
+    ezUInt32 m_uiPrimitiveCount = 0;
+
+    ezGALVertexBufferBinding m_VertexBufferBindings[4] = {};
+    ezGALIndexBufferBinding m_IndexBufferBinding = {};
+
+    const ezGALVertexAttributeDescription* m_pVertexAttributeDesc = nullptr;
+  };
+
+  void BindMeshBuffer(const MeshBufferBinding& meshBufferBinding);
+
+  EZ_ALWAYS_INLINE void BindMeshBuffer(ezGALBufferHandle hVertexBuffer, const ezGALVertexAttributeDescription* pVertexAttributeDesc, ezGALPrimitiveTopology::Enum topology, ezUInt32 uiPrimitiveCount, ezGALBufferHandle hIndexBuffer = ezGALBufferHandle())
+  {
+    MeshBufferBinding meshBufferBinding;
+    meshBufferBinding.m_Topology = topology;
+    meshBufferBinding.m_uiPrimitiveCount = uiPrimitiveCount;
+    meshBufferBinding.m_VertexBufferBindings[0].m_hBuffer = hVertexBuffer;
+    meshBufferBinding.m_IndexBufferBinding.m_hBuffer = hIndexBuffer;
+    meshBufferBinding.m_pVertexAttributeDesc = pVertexAttributeDesc;
+
+    BindMeshBuffer(meshBufferBinding);
+  }
+
   EZ_ALWAYS_INLINE void BindNullMeshBuffer(ezGALPrimitiveTopology::Enum topology, ezUInt32 uiPrimitiveCount)
   {
-    BindMeshBuffer(ezGALBufferHandle(), ezGALBufferHandle(), nullptr, topology, uiPrimitiveCount);
+    MeshBufferBinding meshBufferBinding;
+    meshBufferBinding.m_Topology = topology;
+    meshBufferBinding.m_uiPrimitiveCount = uiPrimitiveCount;
+
+    BindMeshBuffer(meshBufferBinding);
   }
 
   ezResult DrawMeshBuffer(ezUInt32 uiPrimitiveCount = 0xFFFFFFFF, ezUInt32 uiFirstPrimitive = 0, ezUInt32 uiInstanceCount = 1);
@@ -296,11 +325,10 @@ private:
 
   ezBitflags<ezShaderBindFlags> m_ShaderBindFlags;
 
-  ezGALBufferHandle m_hVertexBuffers[4];
-  ezGALBufferHandle m_hIndexBuffer;
-  const ezVertexDeclarationInfo* m_pVertexDeclarationInfo;
-  ezGALPrimitiveTopology::Enum m_Topology;
-  ezUInt32 m_uiMeshBufferPrimitiveCount;
+  ezEnum<ezGALPrimitiveTopology> m_Topology = ezGALPrimitiveTopology::ENUM_COUNT;
+  bool m_bUseIndexedRendering = false;
+  ezUInt32 m_uiMeshBufferPrimitiveCount = 0;
+
   ezEnum<ezTextureFilterSetting> m_DefaultTextureFilter;
   bool m_bAllowAsyncShaderLoading;
   bool m_bStereoRendering = false;
@@ -358,10 +386,6 @@ private:
       return (m_hShader == rhs.m_hShader && m_uiVertexDeclarationHash == rhs.m_uiVertexDeclarationHash);
     }
   };
-
-  static ezResult BuildVertexDeclaration(ezGALShaderHandle hShader, const ezVertexDeclarationInfo& decl, ezGALVertexDeclarationHandle& out_Declaration);
-
-  static ezMap<ShaderVertexDecl, ezGALVertexDeclarationHandle> s_GALVertexDeclarations;
 
   static ezMutex s_ConstantBufferStorageMutex;
   static ezIdTable<ezConstantBufferStorageId, ezConstantBufferStorageBase*> s_ConstantBufferStorageTable;

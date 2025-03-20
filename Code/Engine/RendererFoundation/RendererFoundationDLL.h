@@ -520,13 +520,6 @@ class ezGALSamplerStateHandle
   friend class ezGALDevice;
 };
 
-class ezGALVertexDeclarationHandle
-{
-  EZ_DECLARE_HANDLE_TYPE(ezGALVertexDeclarationHandle, ezGAL::ez18_14Id);
-
-  friend class ezGALDevice;
-};
-
 using ezGALPoolHandle = ezGAL::ez20_44Id;
 using ezGALTimestampHandle = ezGALPoolHandle;
 using ezGALOcclusionHandle = ezGALPoolHandle;

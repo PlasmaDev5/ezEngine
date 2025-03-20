@@ -121,9 +121,9 @@ public:
 
   // State functions
 
-  void SetIndexBuffer(ezGALBufferHandle hIndexBuffer);
-  void SetVertexBuffer(ezUInt32 uiSlot, ezGALBufferHandle hVertexBuffer);
-  void SetVertexDeclaration(ezGALVertexDeclarationHandle hVertexDeclaration);
+  void SetIndexBuffer(ezGALBufferHandle hIndexBuffer, ezUInt32 uiOffsetInBytes = 0);
+  void SetVertexBuffer(ezUInt32 uiSlot, ezGALBufferHandle hVertexBuffer, ezUInt32 uiOffsetInBytes = 0, ezGALVertexBufferStepMode::Enum stepMode = ezGALVertexBufferStepMode::PerVertex);
+  void SetVertexAttributeDescription(const ezGALVertexAttributeDescription& vertexAttributeDesc);
 
   ezGALPrimitiveTopology::Enum GetPrimitiveTopology() const { return m_State.m_Topology; }
   void SetPrimitiveTopology(ezGALPrimitiveTopology::Enum topology);

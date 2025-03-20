@@ -134,22 +134,27 @@ struct ezGALSamplerStateCreationDescription : public ezHashableStruct<ezGALSampl
   ezUInt32 m_uiMaxAnisotropy = 4;
 };
 
-struct EZ_RENDERERFOUNDATION_DLL ezGALVertexAttribute
+struct EZ_RENDERERFOUNDATION_DLL ezGALVertexAttribute : public ezHashableStruct<ezGALVertexAttribute>
 {
   ezGALVertexAttribute() = default;
 
-  ezGALVertexAttribute(ezGALVertexAttributeSemantic::Enum semantic, ezGALResourceFormat::Enum format, ezUInt16 uiOffset, ezUInt8 uiVertexBufferSlot);
+  ezGALVertexAttribute(ezGALVertexAttributeSemantic::Enum semantic, ezGALResourceFormat::Enum format, ezUInt16 uiOffset, ezUInt8 uiVertexBufferSlot = 0);
 
-  ezGALVertexAttributeSemantic::Enum m_eSemantic = ezGALVertexAttributeSemantic::Position;
-  ezGALResourceFormat::Enum m_eFormat = ezGALResourceFormat::XYZFloat;
+  ezEnum<ezGALVertexAttributeSemantic> m_Semantic = ezGALVertexAttributeSemantic::Position;
+  ezEnum<ezGALResourceFormat> m_Format = ezGALResourceFormat::XYZFloat;
   ezUInt16 m_uiOffset = 0;
   ezUInt8 m_uiVertexBufferSlot = 0;
 };
 
-struct EZ_RENDERERFOUNDATION_DLL ezGALVertexDeclarationCreationDescription : public ezHashableStruct<ezGALVertexDeclarationCreationDescription>
+struct EZ_RENDERERFOUNDATION_DLL ezGALVertexAttributeDescription
 {
-  ezGALShaderHandle m_hShader; // TODO WebGPU: try to get rid of this
-  ezStaticArray<ezGALVertexAttribute, 16> m_VertexAttributes;
+  void Clear();
+  void ComputeHash();
+
+  EZ_ALWAYS_INLINE bool IsValid() const { return m_Attributes.GetCount() != 0 && GetHash() != 0; }
+  EZ_ALWAYS_INLINE ezUInt32 GetHash() const { return m_Attributes.GetUserData<ezUInt32>(); }
+
+  ezSmallArray<ezGALVertexAttribute, 9> m_Attributes;
 };
 
 struct ezGALResourceAccess

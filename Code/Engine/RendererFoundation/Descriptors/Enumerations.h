@@ -166,6 +166,22 @@ struct ezGALVertexAttributeSemantic
   };
 };
 
+/// \brief Determines whether the elements in a vertex buffer is stepped/advanced per vertex or per instance.
+struct ezGALVertexBufferStepMode
+{
+  using StorageType = ezUInt8;
+
+  enum Enum : ezUInt8
+  {
+    PerVertex,
+    PerInstance,
+
+    ENUM_COUNT,
+
+    Default = PerVertex
+  };
+};
+
 /// \brief Defines for what purpose a buffer can be used for.
 /// \sa ezGALBufferCreationDescription
 struct ezGALBufferUsageFlags

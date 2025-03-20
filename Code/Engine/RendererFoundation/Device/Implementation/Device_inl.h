@@ -100,11 +100,6 @@ inline const ezGALRasterizerState* ezGALDevice::GetRasterizerState(ezGALRasteriz
   return Get<RasterizerStateTable, ezGALRasterizerState>(hRasterizerState, m_RasterizerStates);
 }
 
-inline const ezGALVertexDeclaration* ezGALDevice::GetVertexDeclaration(ezGALVertexDeclarationHandle hVertexDeclaration) const
-{
-  return Get<VertexDeclarationTable, ezGALVertexDeclaration>(hVertexDeclaration, m_VertexDeclarations);
-}
-
 inline const ezGALSamplerState* ezGALDevice::GetSamplerState(ezGALSamplerStateHandle hSamplerState) const
 {
   return Get<SamplerStateTable, ezGALSamplerState>(hSamplerState, m_SamplerStates);

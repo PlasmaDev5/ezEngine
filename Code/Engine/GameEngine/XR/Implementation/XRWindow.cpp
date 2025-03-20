@@ -128,7 +128,7 @@ void ezWindowOutputTargetXR::CompanionViewEndFrame()
 
     m_pRenderContext->BeginRendering(renderingSetup, ezRectFloat(targetSize.x, targetSize.y));
 
-    m_pRenderContext->BindMeshBuffer(ezGALBufferHandle(), ezGALBufferHandle(), nullptr, ezGALPrimitiveTopology::Triangles, 1);
+    m_pRenderContext->BindNullMeshBuffer(ezGALPrimitiveTopology::Triangles, 1);
     m_pRenderContext->BindConstantBuffer("ezVRCompanionViewConstants", m_hCompanionConstantBuffer);
     m_pRenderContext->BindShader(m_hCompanionShader);
 

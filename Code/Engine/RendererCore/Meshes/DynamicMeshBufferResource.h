@@ -98,7 +98,7 @@ public:
     return m_ColorData;
   }
 
-  const ezVertexDeclarationInfo& GetVertexDeclaration() const { return m_VertexDeclaration; }
+  const ezGALVertexAttributeDescription& GetVertexAttributeDesc() const { return m_VertexAttributeDesc; }
 
   /// \brief Uploads the current vertex and index data to the GPU.
   ///
@@ -126,7 +126,7 @@ private:
   ezGALBufferPool m_ColorBuffer;
   ezDynamicMeshBufferResourceDescriptor m_Descriptor;
 
-  ezVertexDeclarationInfo m_VertexDeclaration;
+  ezGALVertexAttributeDescription m_VertexAttributeDesc;
   ezDynamicArray<ezDynamicMeshVertex, ezAlignedAllocatorWrapper> m_VertexData;
   ezDynamicArray<ezUInt16, ezAlignedAllocatorWrapper> m_Index16Data;
   ezDynamicArray<ezUInt32, ezAlignedAllocatorWrapper> m_Index32Data;

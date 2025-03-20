@@ -9,26 +9,6 @@
 using ezMeshBufferResourceHandle = ezTypedResourceHandle<class ezMeshBufferResource>;
 class ezGeometry;
 
-struct EZ_RENDERERCORE_DLL ezVertexStreamInfo : public ezHashableStruct<ezVertexStreamInfo>
-{
-  EZ_DECLARE_POD_TYPE();
-
-  ezGALVertexAttributeSemantic::Enum m_Semantic;
-  ezUInt8 m_uiVertexBufferSlot = 0;
-  ezGALResourceFormat::Enum m_Format;
-  ezUInt16 m_uiOffset;      ///< at which byte offset the first element starts
-  ezUInt16 m_uiElementSize; ///< the number of bytes for this element type (depends on the format); this is not the stride between elements!
-};
-
-struct EZ_RENDERERCORE_DLL ezVertexDeclarationInfo
-{
-  void ComputeHash();
-
-  ezHybridArray<ezVertexStreamInfo, 8> m_VertexStreams;
-  ezUInt32 m_uiHash;
-};
-
-
 struct EZ_RENDERERCORE_DLL ezMeshBufferResourceDescriptor
 {
 public:
@@ -77,14 +57,14 @@ public:
   template <typename TYPE>
   void SetVertexData(ezUInt32 uiStream, ezUInt32 uiVertexIndex, const TYPE& data)
   {
-    reinterpret_cast<TYPE&>(m_VertexStreamData[m_uiVertexSize * uiVertexIndex + m_VertexDeclaration.m_VertexStreams[uiStream].m_uiOffset]) = data;
+    reinterpret_cast<TYPE&>(m_VertexStreamData[m_uiVertexSize * uiVertexIndex + m_VertexAttributeDesc.m_Attributes[uiStream].m_uiOffset]) = data;
   }
 
   /// \brief Slow, but convenient method to access one piece of vertex data at a time into the stream buffer.
   ///
   /// uiStream is the index of the data stream to write to.
   /// uiVertexIndex is the index of the vertex for which to write the data.
-  ezArrayPtr<ezUInt8> GetVertexData(ezUInt32 uiStream, ezUInt32 uiVertexIndex) { return m_VertexStreamData.GetArrayPtr().GetSubArray(m_uiVertexSize * uiVertexIndex + m_VertexDeclaration.m_VertexStreams[uiStream].m_uiOffset); }
+  ezArrayPtr<ezUInt8> GetVertexData(ezUInt32 uiStream, ezUInt32 uiVertexIndex) { return m_VertexStreamData.GetArrayPtr().GetSubArray(m_uiVertexSize * uiVertexIndex + m_VertexAttributeDesc.m_Attributes[uiStream].m_uiOffset); }
 
   /// \brief Writes the vertex index for the given point into the index buffer.
   void SetPointIndices(ezUInt32 uiPoint, ezUInt32 uiVertex0);
@@ -96,7 +76,7 @@ public:
   void SetTriangleIndices(ezUInt32 uiTriangle, ezUInt32 uiVertex0, ezUInt32 uiVertex1, ezUInt32 uiVertex2);
 
   /// \brief Allows to read the stream info of the descriptor, which is filled out by AddStream()
-  const ezVertexDeclarationInfo& GetVertexDeclaration() const { return m_VertexDeclaration; }
+  const ezGALVertexAttributeDescription& GetVertexAttributeDesc() const { return m_VertexAttributeDesc; }
 
   /// \brief Returns the byte size of all the data for one vertex.
   ezUInt32 GetVertexDataSize() const { return m_uiVertexSize; }
@@ -125,7 +105,7 @@ private:
   ezGALPrimitiveTopology::Enum m_Topology;
   ezUInt32 m_uiVertexSize;
   ezUInt32 m_uiVertexCount;
-  ezVertexDeclarationInfo m_VertexDeclaration;
+  ezGALVertexAttributeDescription m_VertexAttributeDesc;
   ezDynamicArray<ezUInt8, ezAlignedAllocatorWrapper> m_VertexStreamData;
   ezDynamicArray<ezUInt8, ezAlignedAllocatorWrapper> m_IndexBufferData;
 };
@@ -149,7 +129,7 @@ public:
   EZ_ALWAYS_INLINE ezGALPrimitiveTopology::Enum GetTopology() const { return m_Topology; }
 
   /// \brief Returns the vertex declaration used by this mesh buffer.
-  const ezVertexDeclarationInfo& GetVertexDeclaration() const { return m_VertexDeclaration; }
+  const ezGALVertexAttributeDescription& GetVertexAttributeDesc() const { return m_VertexAttributeDesc; }
 
   /// \brief Returns the bounds of the mesh
   const ezBoundingBoxSphere& GetBounds() const { return m_Bounds; }
@@ -160,7 +140,7 @@ private:
   virtual void UpdateMemoryUsage(MemoryUsage& out_NewMemoryUsage) override;
 
   ezBoundingBoxSphere m_Bounds;
-  ezVertexDeclarationInfo m_VertexDeclaration;
+  ezGALVertexAttributeDescription m_VertexAttributeDesc;
   ezUInt32 m_uiPrimitiveCount = 0;
   ezGALBufferHandle m_hVertexBuffer;
   ezGALBufferHandle m_hIndexBuffer;
